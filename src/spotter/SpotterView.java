@@ -7,10 +7,68 @@ import java.util.List;
 public class SpotterView
 {
     private final PrintStream output;
+    private final java.util.Scanner input;
 
     public SpotterView(PrintStream output)
     {
+        this(System.in, output);
+    }
+
+    public SpotterView()
+    {
+        this(System.in, System.out);
+    }
+
+    public SpotterView(java.io.InputStream input, PrintStream output)
+    {
+        this.input = new java.util.Scanner(input);
         this.output = output;
+    }
+
+    public void showProfile(String name, int age, String gender,
+        String workout, String experience, String location)
+    {
+        ProfileView formatter = new ProfileView();
+        output.println(formatter.format(name, age, gender, workout, experience, location));
+        output.println(formatter.formatSwipeOptions());
+    }
+
+    public void showNoProfiles()
+    {
+        output.println(new ProfileView().formatEmpty());
+    }
+
+    public void showMatches(java.util.Collection<String> names)
+    {
+        output.println(new MatchesView().format(new java.util.ArrayList<>(names)));
+    }
+
+    public void showNewMatch(String name)
+    {
+        output.println(new MatchesView().formatNewMatch(name));
+    }
+
+    public void showChat(String otherName, List<String> messages)
+    {
+        output.println(new ChatView().format(otherName, messages));
+    }
+
+    public String readLine(String prompt)
+    {
+        output.print(prompt);
+        output.flush();
+        return input.hasNextLine() ? input.nextLine().trim() : null;
+    }
+
+    public String readChoice()
+    {
+        String line = readLine("> ");
+        return line == null ? null : line.toUpperCase(java.util.Locale.ROOT);
+    }
+
+    public String readMessage()
+    {
+        return readLine(new ChatView().formatPrompt());
     }
 
     public void showProfile(UserProfile profile)

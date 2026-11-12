@@ -1,8 +1,8 @@
 package spotter;
 
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 // -------------------------------------------------------------------------
 /**
@@ -19,6 +19,7 @@ public class ProfileViewTest
     /**
      * setUp
      */
+    @BeforeEach
     public void setUp()
     {
         view = new ProfileView();
@@ -28,6 +29,7 @@ public class ProfileViewTest
     /**
      * test format includes all fields
      */
+    @Test
     public void testFormatAllFields()
     {
         String card = view.format(
@@ -48,6 +50,7 @@ public class ProfileViewTest
     /**
      * test format with null and empty fields
      */
+    @Test
     public void testFormatMissingFields()
     {
         String card = view.format(null, 20, "", null, "", null);
@@ -59,6 +62,7 @@ public class ProfileViewTest
     /**
      * test swipe options
      */
+    @Test
     public void testFormatSwipeOptions()
     {
         String options = view.formatSwipeOptions();
@@ -72,6 +76,7 @@ public class ProfileViewTest
     /**
      * test empty message
      */
+    @Test
     public void testFormatEmpty()
     {
         assertTrue(view.formatEmpty().contains("No more profiles"));

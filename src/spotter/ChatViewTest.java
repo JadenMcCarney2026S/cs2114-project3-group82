@@ -2,9 +2,9 @@ package spotter;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 // -------------------------------------------------------------------------
 /**
@@ -21,6 +21,7 @@ public class ChatViewTest
     /**
      * setUp
      */
+    @BeforeEach
     public void setUp()
     {
         view = new ChatView();
@@ -33,6 +34,7 @@ public class ChatViewTest
     /**
      * test format shows name and messages in order
      */
+    @Test
     public void testFormatMessages()
     {
         String text = view.format("Sam", messages);
@@ -44,6 +46,7 @@ public class ChatViewTest
     /**
      * test format empty conversation
      */
+    @Test
     public void testFormatEmpty()
     {
         String text = view.format("Sam", new ArrayList<String>());
@@ -54,6 +57,7 @@ public class ChatViewTest
     /**
      * test format null messages
      */
+    @Test
     public void testFormatNullMessages()
     {
         String text = view.format("Sam", null);
@@ -64,6 +68,7 @@ public class ChatViewTest
     /**
      * test format null name
      */
+    @Test
     public void testFormatNullName()
     {
         String text = view.format(null, messages);
@@ -74,6 +79,7 @@ public class ChatViewTest
     /**
      * test prompt
      */
+    @Test
     public void testFormatPrompt()
     {
         assertTrue(view.formatPrompt().contains("Enter"));

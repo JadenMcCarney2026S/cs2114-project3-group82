@@ -5,9 +5,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.Before;
-import org.junit.Test;
-import static org.junit.Assert.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 // -------------------------------------------------------------------------
 /**
@@ -24,6 +24,7 @@ public class SpotterViewTest
     /**
      * setUp
      */
+    @BeforeEach
     public void setUp()
     {
         captured = new ByteArrayOutputStream();
@@ -49,6 +50,7 @@ public class SpotterViewTest
     /**
      * test show profile
      */
+    @Test
     public void testShowProfile()
     {
         SpotterView view = viewWithInput("");
@@ -69,6 +71,7 @@ public class SpotterViewTest
     /**
      * test show no profiles
      */
+    @Test
     public void testShowNoProfiles()
     {
         SpotterView view = viewWithInput("");
@@ -80,6 +83,7 @@ public class SpotterViewTest
     /**
      * test show matches
      */
+    @Test
     public void testShowMatches()
     {
         SpotterView view = viewWithInput("");
@@ -96,6 +100,7 @@ public class SpotterViewTest
     /**
      * test show new match
      */
+    @Test
     public void testShowNewMatch()
     {
         SpotterView view = viewWithInput("");
@@ -107,6 +112,7 @@ public class SpotterViewTest
     /**
      * test show chat
      */
+    @Test
     public void testShowChat()
     {
         SpotterView view = viewWithInput("");
@@ -122,20 +128,22 @@ public class SpotterViewTest
     /**
      * test show info and show error
      */
+    @Test
     public void testShowInfoAndError()
     {
         SpotterView view = viewWithInput("");
         view.showInfo("Swipe recorded");
         view.showError("Message cannot be empty");
         String out = captured.toString();
-        assertTrue(out.contains("[info] Swipe recorded"));
-        assertTrue(out.contains("[error] Message cannot be empty"));
+        assertTrue(out.contains("Swipe recorded"));
+        assertTrue(out.contains("Error: Message cannot be empty"));
     }
 
 
     /**
      * test read choice trims and upper-cases
      */
+    @Test
     public void testReadChoice()
     {
         SpotterView view = viewWithInput("  r  \n");
@@ -146,6 +154,7 @@ public class SpotterViewTest
     /**
      * test read choice when input ends
      */
+    @Test
     public void testReadChoiceEndOfInput()
     {
         SpotterView view = viewWithInput("");
@@ -156,6 +165,7 @@ public class SpotterViewTest
     /**
      * test read message
      */
+    @Test
     public void testReadMessage()
     {
         SpotterView view = viewWithInput("see you at 6\n");
@@ -166,6 +176,7 @@ public class SpotterViewTest
     /**
      * test read message when user presses enter
      */
+    @Test
     public void testReadMessageBlank()
     {
         SpotterView view = viewWithInput("\n");
@@ -176,6 +187,7 @@ public class SpotterViewTest
     /**
      * test read message when input ends
      */
+    @Test
     public void testReadMessageEndOfInput()
     {
         SpotterView view = viewWithInput("");
@@ -186,6 +198,7 @@ public class SpotterViewTest
     /**
      * test several reads in order
      */
+    @Test
     public void testMultipleReads()
     {
         SpotterView view = viewWithInput("l\nr\nm\n");
