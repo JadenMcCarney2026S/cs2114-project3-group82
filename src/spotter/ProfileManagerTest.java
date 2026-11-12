@@ -94,13 +94,13 @@ class ProfileManagerTest
             1, "Grace", 20,
             new HashMap<>(java.util.Map.of("Running", "Intermediate")));
         
-        manager.addProfile(grace);
-        manager.addProfile(grace);
+        assertTrue(manager.addProfile(grace));
+        assertFalse(manager.addProfile(grace));
         
         assertEquals(grace, manager.removeNextProfile());
         assertTrue(manager.isEmpty());
         
-        manager.addProfile(grace);
+        assertFalse(manager.addProfile(grace));
         assertTrue(manager.isEmpty());
     }
     

@@ -20,7 +20,7 @@ public class ProfileManager
         seenProfileIds = new HashSet<>();
     }
     
-    public void addProfile(UserProfile profile)
+    public boolean addProfile(UserProfile profile)
     {
         if (profile == null)
         {
@@ -30,7 +30,7 @@ public class ProfileManager
         if (profile.getUserId() == currentUser.getUserId()
             || seenProfileIds.contains(profile.getUserId()))
         {
-            return;
+            return false;
         }
         
         boolean sharedInterest = false;
@@ -46,11 +46,12 @@ public class ProfileManager
 
         if (!sharedInterest)
         {
-            return;
+            return false;
         }
 
         profileQueue.enqueue(profile);
         seenProfileIds.add(profile.getUserId());
+        return true;
      }
     
     public UserProfile getNextProfile()
