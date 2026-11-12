@@ -193,15 +193,34 @@ public class SpotterSwingView extends SpotterView
         JTextField[] fields = new JTextField[6];
         String[] labels = { "Name", "Age", "Goal (optional)", "Gym (optional)",
             "Preferred time (optional)", "About me (optional)" };
+        JComboBox<String> gym = new JComboBox<>(new String[] {
+            "", "War Memorial Hall", "McComas Hall", "Venture Out Center",
+            "Rec Sports Field House", "Washington Street Courts",
+            "Prairie Quad Fitness Park", "VT Intramural Fields",
+            "Sand Volleyball Courts", "VT Golf Course", "Disc Golf Course",
+            "Drillfield", "Roller Hockey Rink", "Venture Out Challenge Course",
+            "Blacksburg Health & Fitness at The Weight Club", "Anytime Fitness",
+            "Zeffer Fitness", "460 Fitness", "Blacksburg Boxing and Fitness",
+            "In Balance Yoga", "Blacksburg Community Center",
+            "Crimper's Climbing Gym", "Blacksburg Aquatic Center",
+            "Christiansburg Aquatic Center" });
+        gym.setEditable(true);
+        gym.setPreferredSize(new Dimension(260, 28));
+        gym.setToolTipText("Facilities from the supplied VT/Blacksburg list; or type your own.");
         JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
         for (int i = 0; i < 6; i++)
         {
             fields[i] = new JTextField();
             form.add(new JLabel(labels[i]));
-            form.add(fields[i]);
+            form.add(i == 3 ? gym : fields[i]);
         }
         JComboBox<String> activity = new JComboBox<>(new String[] {
-            "Running", "Swimming", "Strength training", "Cycling" });
+            "Running", "Swimming", "Strength training", "Cycling", "Basketball",
+            "Volleyball", "Badminton", "Pickleball", "Tennis", "Table tennis",
+            "Racquetball", "Squash", "Boxing", "Yoga", "Pilates", "Dance",
+            "CrossFit", "Bouldering", "Climbing", "Soccer", "Flag football",
+            "Ultimate frisbee", "Golf", "Disc golf", "Roller hockey",
+            "Calisthenics" });
         JComboBox<String> level = new JComboBox<>(new String[] {
             "Beginner", "Intermediate", "Advanced" });
         form.add(new JLabel("Workout interest"));
@@ -217,7 +236,7 @@ public class SpotterSwingView extends SpotterView
                     fields[0].getText(), Integer.parseInt(fields[1].getText().trim()),
                     java.util.Map.of((String)activity.getSelectedItem(),
                         (String)level.getSelectedItem()), fields[2].getText(),
-                    fields[3].getText(), fields[4].getText(), fields[5].getText());
+                    gym.getEditor().getItem().toString(), fields[4].getText(), fields[5].getText());
                 if (createDemoProfile(user))
                 {
                     return;

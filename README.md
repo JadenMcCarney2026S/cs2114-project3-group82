@@ -148,6 +148,15 @@ profile. Existing users see the new candidate if they share a workout interest;
 mutual likes are still required for messaging. New accounts share the same
 in-memory managers. Closing the application loses created profiles.
 
+The editable Gym dropdown includes 23 facilities from the user-provided
+VT/Blacksburg/Christiansburg facility summary, including McComas, War Memorial,
+Venture Out, The Weight Club, and the aquatic centers. A custom location or an
+empty optional field is also allowed. Activity choices include court sports,
+climbing, boxing, yoga, and other sports described in that summary. Facility
+names were transcribed from the supplied material, not independently verified;
+no opening hours, fees, access guarantees, or facility-based filtering are added.
+Sample users' facility choices are fictional demo assignments.
+
 The profile card and console show these additional details. They do not affect
 filtering or mutual-match rules. Existing UserProfile constructor callers still
 work. The original fixed demo accounts are sample data.

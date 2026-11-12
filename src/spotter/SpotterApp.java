@@ -29,13 +29,13 @@ public class SpotterApp
     {
         List<UserProfile> users = List.of(
             new UserProfile(1, "Alice", 20, Map.of("Running", "Beginner"),
-                "Build endurance", "Campus gym", "Morning", "Looking for a steady workout partner."),
+                "Build endurance", "McComas Hall", "Morning", "Looking for a steady workout partner."),
             new UserProfile(2, "Bob", 21, Map.of("Running", "Intermediate"),
-                "Train for a 10K", "Campus gym", "Evening", "Easy runs and good company."),
+                "Train for a 10K", "War Memorial Hall", "Evening", "Easy runs and good company."),
             new UserProfile(3, "Carol", 22, Map.of("Swimming", "Beginner"),
-                "Improve technique", "Aquatic center", "Afternoon", "Learning one lap at a time."),
+                "Improve technique", "Blacksburg Aquatic Center", "Afternoon", "Learning one lap at a time."),
             new UserProfile(4, "Dave", 23, Map.of("Running", "Beginner"),
-                "Stay consistent", "Community gym", "Weekend", "Always up for a relaxed run."));
+                "Stay consistent", "Blacksburg Health & Fitness at The Weight Club", "Weekend", "Always up for a relaxed run."));
         ChatManager chat = new ChatManager(new MatchManager());
         Map<Integer, MainLogic> sessions = new LinkedHashMap<>();
         for (UserProfile user : users)
