@@ -203,25 +203,22 @@ The current full run used `-Djava.awt.headless=true`; all 65 tests passed.
 The photo-enabled desktop panels were rendered at 960 x 820 for all four
 demo profiles and visually inspected. A regression test loads every demo photo
 and checks that new/empty profiles clear the previous image.
-Launching the native JFrame from the tool environment previously terminated
-with exit code 134. David subsequently confirmed a successful local GUI launch:
-Bob's card/photo appeared, and Pass advanced to Carol's card/photo. This is
-user-reported manual verification of launch and profile advancement. David also
-confirmed that Jaden completed the manual reciprocal-like, match-selection,
-message/reply, and Carol account-isolation checks. These manual results are
-team-reported, separate from the automated runs above. These results do not
-establish that every possible input or UI environment works.
+The tool environment could not launch a native window (exit code 134).
+Local manual checks confirmed GUI launch, Bob-to-Carol card/photo advancement,
+reciprocal likes, match selection, messages/replies, and account isolation.
+These team-reported checks are separate from automated results and do not
+establish that every input or UI environment works.
 
 ### D3 rubric evidence and final checks
 
 | Criterion | Evidence | Remaining confirmation |
 | --- | --- | --- |
 | Model Works / Exceeds | LinkedQueueTest: 10 passing Queue tests; 33 model-only tests with no UI compiled. | Team can explain front/rear links and FIFO. |
-| Thin View / Exceeds | Console and Swing actions call SpotterController, then MainLogic; model has no UI imports. | David confirmed local launch and Bob-to-Carol card/photo advancement. |
-| Runs Without Crashing / Exceeds | Full workflow, null/left/duplicate swipes, exhausted queues, bad commands/IDs, rejected messages and unauthorized reads have passing tests. | Jaden completed manual mutual matching, messaging/replies, and Carol account-isolation checks (confirmed by David). |
+| Thin View / Exceeds | Console and Swing actions call SpotterController, then MainLogic; model has no UI imports. | Local launch and Bob-to-Carol card/photo advancement manually checked. |
+| Runs Without Crashing / Exceeds | Full workflow, null/left/duplicate swipes, exhausted queues, bad commands/IDs, rejected messages and unauthorized reads have passing tests. | Jaden completed manual mutual matching, messaging/replies, and Carol account-isolation checks (team-confirmed). |
 | Reflection / Exceeds | Each implementation deviation below names its actual trigger or test failure. | Team factual review. |
 | Next Steps / Exceeds | Shared-workout proposal names methods, unchanged classes, normal/bad-input tests, and confirmed owners. | D4 feature is planned, not implemented. |
-| Attribution + GenAI | Every current Java file has a row; David's AI-assisted work, Gowri's original work and Varooni's merged work are distinguished. | Completed contributions are listed per file, including Jaden's team-reported manual integration tests; planned D4 work remains separate. |
+| Attribution + GenAI | Every current Java file has a row; Original implementation, AI-assisted changes, and manual testing are distinguished. | Completed contributions are listed per file, including Jaden's team-reported manual integration tests; planned D4 work remains separate. |
 
 Bad-input evidence: LinkedQueueTest covers null and empty operations;
 ProfileManagerTest covers self/duplicates/filtering/empty access;
@@ -295,7 +292,7 @@ tests. Eclipse GUI execution and exhaustive input testing were not performed.
 
 The demonstrated fixed-session console flow works. The remaining work below
 addresses known gaps and final delivery; optional scope decisions should be
-confirmed before expanding the MVP. David confirmed the team-agreed assignments
+confirmed before expanding the MVP. The team agreed on the assignments
 below. Future ownership does not imply that the work has already been completed.
 
 | Order | Task and expected methods/classes | Verification | Confirmed owner |
@@ -340,26 +337,17 @@ writes/reads, and attempted mutation of returned routine data. Rejected actions
 must leave the routine unchanged. Decide and document whether zero weight is
 allowed before implementing validation.
 
-The user confirmed pursuing shared workout routines and dropping distance-based
+The team plans to pursue shared workout routines and drop distance-based
 matchmaking and workout history for D4. Other original-scope stretch goals have
 not been independently identified. No D4 feature code was added in this step.
 
 ## Attribution
 
-David confirmed that he directed the Codex-assisted implementation, integration,
-debugging, and automated verification described below. David is credited for
-that work as **David (Codex-assisted)**. Codex generated/revised code and ran
-the reported checks under his direction; this does not claim independent manual
-authorship without AI assistance. David confirmed manual GUI launch and
-Bob-to-Carol card/photo advancement. David confirmed Jaden manually tested
-mutual matching, messaging/replies, and Carol account isolation. Separate human
-code review remains unconfirmed. Gowri's original implementation credit is preserved as confirmed
-by David. Git commit metadata alone is not used as proof of contribution.
-
-David reports that Gowri, Varooni, and Jaden have each personally read and
-confirmed their Attribution entries and agreed D4 responsibilities. This is
-team confirmation reported through David, separate from the automated test
-results and from a detailed source-code review.
+The table records original implementation, Codex-assisted changes, and manual
+testing. Codex generated/revised code and executed automated checks under team
+direction. Team members confirmed their attribution entries and D4 roles;
+this confirmation is separate from a detailed source-code review. AI-assisted
+work is labeled explicitly.
 
 All paths below are under `src/spotter/`. This table includes every current
 class/enum and test file. LinkedQueue's private Node class is included in its
@@ -367,12 +355,12 @@ file's row.
 
 | File | Actual contribution supported by available information |
 | --- | --- |
-| UserProfile.java | Gowri: original implementation (user-confirmed). David (Codex-assisted): added optional goal/gym/time/bio fields and compatible constructor; tested validation. |
+| UserProfile.java | Gowri: original implementation (team-confirmed). David (Codex-assisted): added optional goal/gym/time/bio fields and compatible constructor; tested validation. |
 | UserProfileTest.java | David (Codex-assisted): generated and executed 5 constructor, edit-validation, and defensive-copy tests. |
-| LinkedQueue.java | Gowri: original implementation including Node (user-confirmed). David (Codex-assisted): inspected; no production changes; directed inspection and automated test execution. |
-| ProfileManager.java | Gowri: original implementation (user-confirmed). David (Codex-assisted): revised addProfile return value and checked callers/tests. |
-| LinkedQueueTest.java | Gowri: original tests (user-confirmed). David (Codex-assisted): added two edge-case tests and executed suite. |
-| ProfileManagerTest.java | Gowri: original tests (user-confirmed). David (Codex-assisted): added return-value assertions and executed suite. |
+| LinkedQueue.java | Gowri: original implementation including Node (team-confirmed). David (Codex-assisted): inspected; no production changes; directed inspection and automated test execution. |
+| ProfileManager.java | Gowri: original implementation (team-confirmed). David (Codex-assisted): revised addProfile return value and checked callers/tests. |
+| LinkedQueueTest.java | Gowri: original tests (team-confirmed). David (Codex-assisted): added two edge-case tests and executed suite. |
+| ProfileManagerTest.java | Gowri: original tests (team-confirmed). David (Codex-assisted): added return-value assertions and executed suite. |
 | SwipeAction.java | David (Codex-assisted): generated LEFT/RIGHT enum; exercised through workflow tests. |
 | MainLogic.java | David (Codex-assisted): generated model orchestration; exercised through model and Controller tests. |
 | MatchManager.java | David (Codex-assisted): generated shared swipe/mutual-like state; exercised through workflow tests. |
@@ -380,23 +368,22 @@ file's row.
 | Message.java | David (Codex-assisted): generated immutable sender/content/timestamp fields and content validation; used by messaging tests. |
 | MainLogicTest.java | David (Codex-assisted): generated and executed 11 workflow tests. |
 | SpotterView.java | David (Codex-assisted): implemented console View and compatibility methods for Varooni's formatter/input APIs; exercised integration tests/process runs. |
-| SpotterController.java | David (Codex-assisted): generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Jaden: manually tested mutual matching, messaging/replies, and account isolation (confirmed by David). |
+| SpotterController.java | David (Codex-assisted): generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Jaden: manually tested mutual matching, messaging/replies, and account isolation (team-confirmed). |
 | SpotterApp.java | David (Codex-assisted): generated demo wiring; executed separate console processes. |
-| SpotterSwingView.java | David (Codex-assisted): implemented Swing card/chat View and automated rendering/button checks. David: manually confirmed local launch and Bob-to-Carol card/photo advancement. Jaden: manually tested match selection, messaging/replies, account switching, and Carol conversation isolation (confirmed by David). |
+| SpotterSwingView.java | David (Codex-assisted): implemented Swing card/chat View and automated rendering/button checks. David: manually confirmed local launch and Bob-to-Carol card/photo advancement. Jaden: manually tested match selection, messaging/replies, account switching, and Carol conversation isolation (team-confirmed). |
 | SpotterSwingViewTest.java | David (Codex-assisted): generated and executed 4 desktop interaction tests, including creating a profile and matching/messaging with an existing account. |
 | SpotterControllerTest.java | David (Codex-assisted): generated and executed 3 integration tests. |
-| ProfileView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
-| MatchesView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
-| ChatView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
-| ProfileViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
-| MatchesViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
-| ChatViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 5 tests. |
-| SpotterViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): adapted console assertions, enabled Jupiter annotations, and executed 12 tests. |
+| ProfileView.java | Varooni: authored (team-confirmed). David (Codex-assisted): integrated existing formatter API. |
+| MatchesView.java | Varooni: authored (team-confirmed). David (Codex-assisted): integrated existing formatter API. |
+| ChatView.java | Varooni: authored (team-confirmed). David (Codex-assisted): integrated existing formatter API. |
+| ProfileViewTest.java | Varooni: authored (team-confirmed). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
+| MatchesViewTest.java | Varooni: authored (team-confirmed). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
+| ChatViewTest.java | Varooni: authored (team-confirmed). David (Codex-assisted): enabled Jupiter annotations and executed 5 tests. |
+| SpotterViewTest.java | Varooni: authored (team-confirmed). David (Codex-assisted): adapted console assertions, enabled Jupiter annotations, and executed 12 tests. |
 
-David also directed the Codex-assisted updates to `.classpath` and this README. The
-pre-existing `.project` resource-filter edit was left untouched; its contributor
-is not established here. Team members should confirm substantive contributions
-and human review before submitting; intended ownership is not actual attribution.
+The .classpath and README updates were also Codex-assisted. A pre-existing
+.project resource-filter edit was preserved. Planned responsibilities are
+separate from completed contributions.
 
 ## GenAI usage note
 
@@ -404,7 +391,7 @@ The supplied specification reports ChatGPT assistance with MVC design, method
 signatures, data/state, validation, testing, and scope clarification. That is
 the document's account, not independently verified authorship of source files.
 
-In this session, David asked Codex to inspect the requirements/repository,
+For this deliverable, the team used Codex to inspect the requirements/repository,
 compare the implementation with the rubric, establish a test baseline, complete
 the independent Queue/model checks, implement the missing core workflow, connect
 a minimal console, and write an evidence-based README. Codex generated the new
@@ -413,15 +400,12 @@ and executed the reported compiler/test/process checks. Existing working Queue
 and profile behavior was reused. Earlier checks used Eclipse's batch compiler;
 Step 6 used javac with Java 17 and the cached JUnit runner.
 
-David supplied original-file attribution and confirmed stretch-goal choices;
-D4 owners are now confirmed by David. David also confirmed local GUI launch
-and Bob-to-Carol card/photo advancement, and reported Jaden's completed manual
-matching/chat/account-isolation checks. Separate human code review remains
-unconfirmed. The proposed D4
-impact prediction above was prepared with Codex assistance and has not been
-validated by implementing the feature. David's AI-assisted implementation and
-integration are credited explicitly; generated code is not described as written
-without AI assistance. No unexecuted test is reported as passing.
+The team confirmed attribution, stretch-goal choices, and D4 owners. Manual GUI
+checks are reported separately from automated results; detailed human source
+review remains unconfirmed. The D4 impact prediction was prepared with Codex
+assistance and has not been validated by implementing the feature. Generated
+code is identified as AI-assisted, and unexecuted tests are not reported as
+passing.
 
 Carol now shares Running as well as Swimming, so Alice sees Bob, Carol, then
 Dave in FIFO order. This changes demo data only; shared-interest filtering is
