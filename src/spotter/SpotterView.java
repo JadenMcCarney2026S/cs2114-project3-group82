@@ -1,132 +1,84 @@
 package spotter;
 
-import java.io.InputStream;
 import java.io.PrintStream;
 import java.util.List;
-import java.util.Scanner;
 
-// -------------------------------------------------------------------------
-/**
- * SpotterView Class, it is the main interface
- * 
- * @author varoonisawant
- * @version Nov 12, 2026
- */
+/** Console formatting only; all actions go through the controller. */
 public class SpotterView
 {
-    private final Scanner in;
-    private final PrintStream out;
-    private final ProfileView profileView;
-    private final MatchesView matchesView;
-    private final ChatView chatView;
+    private final PrintStream output;
 
-    /**
-     * Console version: System.in / System.out.
-     */
-    public SpotterView()
+    public SpotterView(PrintStream output)
     {
-        this(System.in, System.out);
+        this.output = output;
     }
 
-
-    /**
-     * Injectable streams so the view can be tested without a real console.
-     */
-    public SpotterView(InputStream input, PrintStream output)
+    public void showProfile(UserProfile profile)
     {
-        this.in = new Scanner(input);
-        this.out = output;
-        this.profileView = new ProfileView();
-        this.matchesView = new MatchesView();
-        this.chatView = new ChatView();
+        if (profile == null)
+        {
+            showInfo("No more profiles.");
+            return;
+        }
+        showInfo("\n--- NEXT PROFILE ---");
+        showInfo("Profile " + profile.getUserId() + ": " + profile.getName()
+            + ", age " + profile.getAge() + ", " + profile.getWorkoutExperience());
+        showInfo("Goal: " + profile.getGoal() + " | Gym: " + profile.getGym());
+        showInfo("Time: " + profile.getPreferredTime() + " | About: " + profile.getBio());
     }
 
-
-    public void showProfile(
-        String name,
-        int age,
-        String gender,
-        String workout,
-        String gymExperience,
-        String location)
+    public void showMatches(List<UserProfile> matches)
     {
-        out.println(
-            profileView
-                .format(name, age, gender, workout, gymExperience, location));
-        out.println(profileView.formatSwipeOptions());
+        showInfo("\n--- YOUR MATCHES (" + matches.size() + ") ---");
+        if (matches.isEmpty())
+        {
+            showInfo("No matches yet.");
+        }
+        for (UserProfile profile : matches)
+        {
+            showInfo("Match " + profile.getUserId() + ": " + profile.getName());
+        }
     }
 
-
-    /**
-     * Shown when the queue is empty.
-     */
-    public void showNoProfiles()
+    public void showChat(List<String> conversation)
     {
-        out.println(profileView.formatEmpty());
+        showInfo("\n--- CONVERSATION ---");
+        if (conversation.isEmpty())
+        {
+            showInfo("No accessible messages.");
+        }
+        for (String message : conversation)
+        {
+            showInfo(message);
+        }
     }
 
-
-    public void showMatches(List<String> matchedNames)
+    public void showMenu()
     {
-        out.println(matchesView.format(matchedNames));
+        showInfo("\n=============== SPOTTER ===============");
+        showInfo("profile           View the next candidate");
+        showInfo("left / right      Pass / like, then advance the queue");
+        showInfo("matches           View mutual matches");
+        showInfo("send <id> <text>  Message a match");
+        showInfo("chat <id>         Read your conversation");
+        showInfo("user <id>         Switch demo user (not login)");
+        showInfo("help / quit       Show this menu / exit");
+        showInfo("=======================================");
     }
 
-
-    public void showNewMatch(String name)
+    public void showPrompt(int userId)
     {
-        out.println(matchesView.formatNewMatch(name));
+        output.print("\nspotter [user " + userId + "]> ");
+        output.flush();
     }
-
-
-    public void showChat(String otherName, List<String> messages)
-    {
-        out.println(chatView.format(otherName, messages));
-    }
-
 
     public void showInfo(String message)
     {
-        out.println("[info] " + message);
+        output.println(message);
     }
-
 
     public void showError(String message)
     {
-        out.println("[error] " + message);
+        output.println("Error: " + message);
     }
-
-
-    /**
-     * Prints a prompt and returns the trimmed line, or null if input has ended.
-     */
-    public String readLine(String prompt)
-    {
-        out.print(prompt);
-        out.flush();
-        if (!in.hasNextLine())
-        {
-            return null;
-        }
-        return in.nextLine().trim();
-    }
-
-
-    /**
-     * Reads a menu choice, upper-cased (e.g. "L", "R", "M", "Q").
-     */
-    public String readChoice()
-    {
-        String line = readLine("> ");
-        return line == null ? null : line.toUpperCase();
-    }
-
-
-    /**
-     * Reads the text of a chat message.
-     */
-    public String readMessage()
-    {
-        return readLine(chatView.formatPrompt());
-    }
-
 }
