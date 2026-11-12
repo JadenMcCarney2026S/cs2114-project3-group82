@@ -8,8 +8,11 @@ import javax.swing.border.EmptyBorder;
 /** Optional desktop presentation; business rules stay in the existing model. */
 public class SpotterSwingView extends SpotterView
 {
-    private static final Color INK = new Color(38, 39, 54);
-    private static final Color ACCENT = new Color(223, 65, 101);
+    private static final Color INK = new Color(225, 239, 230);
+    private static final Color ACCENT = new Color(77, 230, 142);
+    private static final Color BACKGROUND = new Color(9, 13, 11);
+    private static final Color SURFACE = new Color(20, 28, 23);
+    private static final Color MUTED = new Color(149, 174, 158);
     private final JPanel panel = new JPanel(new BorderLayout(24, 24));
     private final JLabel name = new JLabel("Discover", SwingConstants.CENTER);
     private final JLabel details = new JLabel("", SwingConstants.CENTER);
@@ -30,7 +33,7 @@ public class SpotterSwingView extends SpotterView
     {
         super(System.out);
         controller = new SpotterController(SpotterApp.createSessions(), 1, this);
-        panel.setBackground(new Color(250, 247, 248));
+        panel.setBackground(BACKGROUND);
         panel.setBorder(new EmptyBorder(24, 28, 20, 28));
         panel.setPreferredSize(new Dimension(960, 650));
 
@@ -42,28 +45,34 @@ public class SpotterSwingView extends SpotterView
         header.add(brand, BorderLayout.WEST);
         JPanel account = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         account.setOpaque(false);
-        account.add(new JLabel("Demo account"));
+        JLabel accountLabel = new JLabel("Demo account");
+        accountLabel.setForeground(MUTED);
+        account.add(accountLabel);
         users.setName("users");
+        users.setUI(new javax.swing.plaf.basic.BasicComboBoxUI());
+        users.setBackground(SURFACE);
+        users.setForeground(INK);
         account.add(users);
         header.add(account, BorderLayout.EAST);
         panel.add(header, BorderLayout.NORTH);
 
         JPanel card = new JPanel(new BorderLayout(12, 12));
-        card.setBackground(Color.WHITE);
+        card.setBackground(SURFACE);
         card.setBorder(new EmptyBorder(24, 24, 24, 24));
         JLabel intro = new JLabel("FIND YOUR NEXT GYM PARTNER", SwingConstants.CENTER);
-        intro.setForeground(new Color(116, 112, 126));
+        intro.setForeground(MUTED);
         card.add(intro, BorderLayout.NORTH);
         JPanel identity = new JPanel(new GridLayout(3, 1, 0, 12));
         identity.setOpaque(false);
         avatar.setOpaque(true);
-        avatar.setBackground(new Color(251, 227, 234));
+        avatar.setBackground(new Color(22, 55, 36));
         avatar.setForeground(ACCENT);
         avatar.setFont(new Font("SansSerif", Font.BOLD, 68));
         name.setFont(new Font("SansSerif", Font.BOLD, 30));
         name.setForeground(INK);
         identity.add(avatar);
         identity.add(name);
+        details.setForeground(MUTED);
         identity.add(details);
         card.add(identity, BorderLayout.CENTER);
         JPanel actions = new JPanel(new GridLayout(1, 2, 16, 0));
@@ -73,13 +82,18 @@ public class SpotterSwingView extends SpotterView
         card.add(actions, BorderLayout.SOUTH);
 
         JPanel inbox = new JPanel(new BorderLayout(10, 12));
-        inbox.setBackground(Color.WHITE);
+        inbox.setBackground(SURFACE);
         inbox.setBorder(new EmptyBorder(20, 20, 20, 20));
         inbox.setPreferredSize(new Dimension(340, 480));
         JLabel title = new JLabel("Your matches & messages");
         title.setFont(new Font("SansSerif", Font.BOLD, 19));
+        title.setForeground(INK);
         inbox.add(title, BorderLayout.NORTH);
         matches.setName("matches");
+        matches.setBackground(BACKGROUND);
+        matches.setForeground(INK);
+        matches.setSelectionBackground(new Color(30, 75, 46));
+        matches.setSelectionForeground(ACCENT);
         matches.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         matches.setCellRenderer(new DefaultListCellRenderer()
         {
@@ -96,6 +110,8 @@ public class SpotterSwingView extends SpotterView
             }
         });
         conversation.setName("conversation");
+        conversation.setBackground(BACKGROUND);
+        conversation.setForeground(INK);
         conversation.setEditable(false);
         conversation.setLineWrap(true);
         conversation.setWrapStyleWord(true);
@@ -105,11 +121,20 @@ public class SpotterSwingView extends SpotterView
             new JScrollPane(matches), new JScrollPane(conversation));
         chats.setDividerLocation(140);
         chats.setResizeWeight(0.35);
-        chats.setBorder(null);
+        chats.setBorder(BorderFactory.createLineBorder(SURFACE));
+        chats.setBackground(SURFACE);
+        chats.setUI(new javax.swing.plaf.basic.BasicSplitPaneUI());
         inbox.add(chats, BorderLayout.CENTER);
         JPanel compose = new JPanel(new BorderLayout(8, 0));
         compose.setOpaque(false);
         message.setName("message");
+        message.setBackground(BACKGROUND);
+        message.setForeground(INK);
+        message.setCaretColor(ACCENT);
+        message.setDisabledTextColor(MUTED);
+        message.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            new EmptyBorder(8, 10, 8, 10)));
         compose.add(message, BorderLayout.CENTER);
         compose.add(send, BorderLayout.EAST);
         inbox.add(compose, BorderLayout.SOUTH);
@@ -156,8 +181,14 @@ public class SpotterSwingView extends SpotterView
     {
         JButton result = new JButton(text);
         result.setName(componentName);
+        result.setUI(new javax.swing.plaf.basic.BasicButtonUI());
+        result.setOpaque(true);
+        result.setBackground(componentName.equals("pass") ? SURFACE : ACCENT);
+        result.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            new EmptyBorder(8, 12, 8, 12)));
         result.setFont(new Font("SansSerif", Font.BOLD, 16));
-        result.setForeground(componentName.equals("pass") ? INK : ACCENT);
+        result.setForeground(componentName.equals("pass") ? INK : BACKGROUND);
         result.setPreferredSize(new Dimension(100, 48));
         return result;
     }
