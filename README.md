@@ -73,7 +73,8 @@ java -cp "$CONSOLE_OUT" spotter.SpotterApp
 ```
 
 The demo starts as Alice (ID 1). Bob (ID 2) and Dave (ID 4) also like
-Running; Carol (ID 3) likes Swimming and has no eligible candidates in this sample. Commands:
+Running; Carol (ID 3) likes both Swimming and Running, so she also appears
+in the Running users' candidate queues. Commands:
 
 | Command | Action |
 | --- | --- |
@@ -91,7 +92,7 @@ For a presentation, launch the guided demo instead:
 java -cp "$CONSOLE_OUT" spotter.SpotterApp --demo
 ```
 
-Press Enter to run each of 17 explained steps, or type `quit` to stop. The demo
+Press Enter to run each of 18 explained steps, or type `quit` to stop. The demo
 uses real Controller commands and reciprocal swipes, not seeded matches. Dave
 makes queue advancement visible; the guided flow also demonstrates a left swipe,
 an empty queue, rejected messaging, shared conversations, and invalid input.
@@ -363,3 +364,7 @@ remaining owners and human review/testing are unconfirmed. The proposed D4
 impact prediction above was prepared with Codex assistance and has not been
 validated by implementing the feature. No generated feature is presented as
 human-authored work, and no unexecuted test is reported as passing.
+
+Carol now shares Running as well as Swimming, so Alice sees Bob, Carol, then
+Dave in FIFO order. This changes demo data only; shared-interest filtering is
+still enforced. Passing or liking Bob advances to Carol's photo.

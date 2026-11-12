@@ -12,7 +12,7 @@ public class SpotterApp
         Map<Integer, MainLogic> sessions = createSessions();
         SpotterView view = new SpotterView(System.out);
         view.showInfo("Spotter demo: 1 Alice, 2 Bob, 3 Carol, 4 Dave. Active user: 1");
-        view.showInfo("Alice, Bob, Dave: Running | Carol: Swimming");
+        view.showInfo("Alice, Bob, Dave: Running | Carol: Swimming + Running");
         SpotterController controller = new SpotterController(sessions, 1, view);
         Scanner input = new Scanner(System.in);
         if (args.length == 1 && args[0].equals("--demo"))
@@ -32,7 +32,7 @@ public class SpotterApp
                 "Build endurance", "McComas Hall", "Morning", "Looking for a steady workout partner."),
             new UserProfile(2, "Bob", 21, Map.of("Running", "Intermediate"),
                 "Train for a 10K", "War Memorial Hall", "Evening", "Easy runs and good company."),
-            new UserProfile(3, "Carol", 22, Map.of("Swimming", "Beginner"),
+            new UserProfile(3, "Carol", 22, Map.of("Swimming", "Beginner", "Running", "Beginner"),
                 "Improve technique", "Blacksburg Aquatic Center", "Afternoon", "Learning one lap at a time."),
             new UserProfile(4, "Dave", 23, Map.of("Running", "Beginner"),
                 "Stay consistent", "Blacksburg Health & Fitness at The Weight Club", "Weekend", "Always up for a relaxed run."));
@@ -56,8 +56,9 @@ public class SpotterApp
         String[][] steps = {
             {"Retrieve Bob without consuming the queue", "profile"},
             {"A message before matching must be rejected", "send 2 Hello"},
-            {"Alice likes Bob; Dave becomes the next profile", "right"},
+            {"Alice likes Bob; Carol becomes the next profile", "right"},
             {"One-sided like does not create a match", "matches"},
+            {"Alice passes Carol; Dave becomes the next profile", "left"},
             {"Alice passes Dave; the queue is now empty", "left"},
             {"Swiping an empty queue is safe", "right"},
             {"Switch to Bob's independent session", "user 2"},
@@ -68,7 +69,7 @@ public class SpotterApp
             {"Alice can also see the match", "matches"},
             {"Alice replies", "send 2 Hi Bob"},
             {"Read both messages", "chat 2"},
-            {"Carol has no shared interests with these candidates", "user 3"},
+            {"Switch to Carol, who shares Running but has no mutual match", "user 3"},
             {"Carol cannot read Alice and Bob's messages", "chat 1"},
             {"Malformed IDs produce an error, not a crash", "user abc"}
         };

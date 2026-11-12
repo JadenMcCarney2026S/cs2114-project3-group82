@@ -64,7 +64,7 @@ class SpotterSwingViewTest
             assertEquals(0, matches.getModel().getSize());
             assertFalse(send.isEnabled());
             assertFalse(history.getText().contains("Hello Alice"));
-            assertFalse(like.isEnabled());
+            assertTrue(like.isEnabled());
         });
     }
 
@@ -75,6 +75,10 @@ class SpotterSwingViewTest
             JPanel panel = new SpotterSwingView().getPanel();
             JButton pass = (JButton)find(panel, "pass");
             JButton like = (JButton)find(panel, "like");
+            pass.doClick();
+            assertTrue(pass.isEnabled());
+            assertTrue(((JTextArea)find(panel, "details")).getText().contains("Swimming"));
+            assertNotNull(((JLabel)find(panel, "avatar")).getIcon());
             pass.doClick();
             assertTrue(pass.isEnabled());
             pass.doClick();
@@ -104,6 +108,7 @@ class SpotterSwingViewTest
             users.setSelectedIndex(0);
             JButton pass = (JButton)find(panel, "pass");
             pass.doClick(); // Bob
+            pass.doClick(); // Carol
             pass.doClick(); // Dave
             assertTrue(((JTextArea)find(panel, "details")).getText().contains("Build stamina"));
             like.doClick(); // Alice likes Eve.
