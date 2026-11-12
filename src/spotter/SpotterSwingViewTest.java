@@ -118,4 +118,27 @@ class SpotterSwingViewTest
         });
     }
 
+    @Test
+    void testDemoPhotosAndFallback() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            SpotterSwingView view = new SpotterSwingView();
+            JLabel avatar = (JLabel)find(view.getPanel(), "avatar");
+            for (int id = 1; id <= 4; id++)
+            {
+                view.showProfile(new UserProfile(id, "Demo", 20, Map.of()));
+                assertNotNull(avatar.getIcon(), "Missing demo photo for " + id);
+                assertTrue(avatar.getIcon().getIconWidth() > 0);
+                assertEquals(290, avatar.getIcon().getIconHeight());
+                assertEquals("", avatar.getText());
+            }
+            view.showProfile(new UserProfile(99, "Eve", 20, Map.of()));
+            assertNull(avatar.getIcon());
+            assertEquals("E", avatar.getText());
+            view.showProfile(null);
+            assertNull(avatar.getIcon());
+            assertEquals("-", avatar.getText());
+        });
+    }
+
 }

@@ -35,7 +35,7 @@ public class SpotterSwingView extends SpotterView
         controller = new SpotterController(SpotterApp.createSessions(), 1, this);
         panel.setBackground(BACKGROUND);
         panel.setBorder(new EmptyBorder(24, 28, 20, 28));
-        panel.setPreferredSize(new Dimension(960, 650));
+        panel.setPreferredSize(new Dimension(960, 820));
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
@@ -66,7 +66,7 @@ public class SpotterSwingView extends SpotterView
         JLabel intro = new JLabel("FIND YOUR NEXT GYM PARTNER", SwingConstants.CENTER);
         intro.setForeground(MUTED);
         card.add(intro, BorderLayout.NORTH);
-        JPanel identity = new JPanel(new GridLayout(3, 1, 0, 12));
+        JPanel identity = new JPanel(new BorderLayout(0, 12));
         identity.setOpaque(false);
         avatar.setOpaque(true);
         avatar.setBackground(new Color(22, 55, 36));
@@ -74,8 +74,11 @@ public class SpotterSwingView extends SpotterView
         avatar.setFont(new Font("SansSerif", Font.BOLD, 68));
         name.setFont(new Font("SansSerif", Font.BOLD, 30));
         name.setForeground(INK);
-        identity.add(avatar);
-        identity.add(name);
+        avatar.setName("avatar");
+        identity.add(avatar, BorderLayout.CENTER);
+        JPanel profileInfo = new JPanel(new BorderLayout(0, 8));
+        profileInfo.setOpaque(false);
+        profileInfo.add(name, BorderLayout.NORTH);
         details.setForeground(MUTED);
         details.setName("details");
         details.setBackground(SURFACE);
@@ -83,7 +86,9 @@ public class SpotterSwingView extends SpotterView
         details.setLineWrap(true);
         details.setWrapStyleWord(true);
         details.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        identity.add(details);
+        details.setPreferredSize(new Dimension(400, 115));
+        profileInfo.add(details, BorderLayout.CENTER);
+        identity.add(profileInfo, BorderLayout.SOUTH);
         card.add(identity, BorderLayout.CENTER);
         JPanel actions = new JPanel(new GridLayout(1, 2, 16, 0));
         actions.setOpaque(false);
@@ -313,7 +318,25 @@ public class SpotterSwingView extends SpotterView
         boolean available = profile != null;
         pass.setEnabled(available);
         like.setEnabled(available);
-        avatar.setText(available ? profile.getName().substring(0, 1).toUpperCase() : "-");
+        avatar.setIcon(null);
+        if (available)
+        {
+            String file = java.util.Map.of(1, "demo-1.jpg", 2, "demo-2.jpg",
+                3, "demo-7.jpg", 4, "demo-3.jpg").get(profile.getUserId());
+            java.net.URL resource = file == null ? null : getClass().getResource("photos/" + file);
+            if (resource != null)
+            {
+                ImageIcon original = new ImageIcon(resource);
+                if (original.getIconWidth() > 0 && original.getIconHeight() > 0)
+                {
+                    int height = 290;
+                    int width = original.getIconWidth() * height / original.getIconHeight();
+                    avatar.setIcon(new ImageIcon(original.getImage().getScaledInstance(
+                        Math.max(1, width), height, Image.SCALE_SMOOTH)));
+                }
+            }
+        }
+        avatar.setText(avatar.getIcon() != null ? "" : available ? profile.getName().substring(0, 1).toUpperCase() : "-");
         name.setText(available ? profile.getName() + ", " + profile.getAge() : "All caught up");
         details.setText(available ? "Interests: " + profile.getWorkoutExperience()
             + "\nGoal: " + profile.getGoal() + "\nGym: " + profile.getGym()
@@ -368,7 +391,7 @@ public class SpotterSwingView extends SpotterView
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             window.setContentPane(view.getPanel());
             window.pack();
-            window.setMinimumSize(new Dimension(820, 600));
+            window.setMinimumSize(new Dimension(900, 800));
             window.setLocationRelativeTo(null);
             window.setVisible(true);
         });

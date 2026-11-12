@@ -125,6 +125,7 @@ rules and routes buttons through SpotterController. No extra library is needed.
 Compile production sources using the console instructions, then launch:
 
 ```sh
+cp -R src/spotter/photos "$CONSOLE_OUT/spotter/"
 java -cp "$CONSOLE_OUT" spotter.SpotterSwingView
 ```
 
@@ -133,7 +134,10 @@ switch the Demo account dropdown to Bob, and like Alice. Select the resulting
 match in the list to send a message, then switch back to Alice and select Bob
 to see and reply to the same conversation. Carol cannot see that conversation.
 Pass and Like disable when a queue is exhausted. The dropdown is demo identity
-switching, not authentication. Profiles use initial avatars, not photographs.
+switching, not authentication. The four fixed demo profiles use user-supplied sample photos: Alice and Carol
+use the two female portraits; Bob and Dave use two male portraits. These are
+fictional demo assignments, not claims about the people pictured. New profiles
+without a photo use their initial.
 
 SpotterApp.createSessions is shared by console and desktop launchers; each new
 launch starts fresh in-memory state. The original console remains available.
@@ -172,7 +176,7 @@ On Java 17.0.12, compilation succeeded and these tests were actually executed:
 | `ProfileManagerTest.java` | 7/7 passed | Eligibility, self/duplicate exclusion, FIFO removal, empty access, no re-addition after removal. |
 | `MainLogicTest.java` | 11/11 passed | Actual two-user swipes, mutual matches, null/left swipes, history, filtering, empty queues, messaging and unauthorized access. |
 | `SpotterControllerTest.java` | 3/3 passed after correction | Console workflow, invalid commands/IDs, empty queues, message rejection, EOF. |
-| `SpotterSwingViewTest.java` | 3/3 passed | Actual button-driven reciprocal match/chat, blank-message rejection, account isolation, pass and exhausted queues. |
+| `SpotterSwingViewTest.java` | 4/4 passed | Actual button-driven reciprocal match/chat, blank-message rejection, account isolation, pass and exhausted queues. |
 
 The earlier model-only run passed 28 tests without compiling View or Controller code.
 The separate Controller run passed 3 tests. Separate console processes also
@@ -180,8 +184,10 @@ completed the two-user workflow, malformed-input/empty-queue checks, and an
 immediate EOF check with exit code 0 and no unhandled exception. Inputs included
 blank/unknown commands, nonnumeric and overflowing IDs, unknown users, missing
 arguments, empty messages, and unmatched messaging. `git diff --check` passed.
-After adding the desktop View, all 36 tests passed with `-Djava.awt.headless=true`.
-The desktop panel was also rendered at 960 x 650 and visually inspected.
+After adding the desktop View, all 37 tests passed with `-Djava.awt.headless=true`.
+The photo-enabled desktop panels were rendered at 960 x 820 for all four
+demo profiles and visually inspected. A regression test loads every demo photo
+and checks that new/empty profiles clear the previous image.
 Launching the native JFrame from the tool environment terminated with exit code
 134 and no diagnostic output; native window interaction therefore remains
 unverified. Run it in the local IDE/desktop to check the actual window. These results do not
@@ -329,7 +335,7 @@ file's row.
 | SpotterController.java | Codex: generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Human reviewer/tester unconfirmed. |
 | SpotterApp.java | Codex: generated demo wiring; executed separate console processes. Human reviewer/tester unconfirmed. |
 | SpotterSwingView.java | Codex: generated optional Swing card/chat View, rendered preview, and exercised button events headlessly. Human reviewer/tester unconfirmed. |
-| SpotterSwingViewTest.java | Codex: generated and executed 3 desktop interaction tests, including creating a profile and matching/messaging with an existing account. Human reviewer/tester unconfirmed. |
+| SpotterSwingViewTest.java | Codex: generated and executed 4 desktop interaction tests, including creating a profile and matching/messaging with an existing account. Human reviewer/tester unconfirmed. |
 | SpotterControllerTest.java | Codex: generated and executed 3 integration tests. Human reviewer/tester unconfirmed. |
 
 Codex also updated `.classpath` and this README at the user's request. The
