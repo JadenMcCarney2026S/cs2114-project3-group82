@@ -54,12 +54,21 @@ including the separately merged ProfileView, MatchesView, and ChatView.
 ```sh
 TEST_OUT=$(mktemp -d /tmp/group82-tests.XXXXXX)
 javac -d "$TEST_OUT" -cp "$JUNIT" src/spotter/*.java
+cp -R src/spotter/photos "$TEST_OUT/spotter/"
 java -jar "$JUNIT" execute --class-path "$TEST_OUT" \
   --select-class spotter.SpotterControllerTest --fail-if-no-tests --details summary
 ```
 
-To run all tests, use the same output directory and replace `--select-class
-spotter.SpotterControllerTest` with `--scan-class-path`.
+The copy step puts the four photo files on the runtime classpath. `javac`
+compiles Java files but does not copy images. Omitting it causes the two
+photo-dependent Swing tests to fail in a fresh output directory.
+
+To run all 65 tests after the same compilation and resource copy:
+
+```sh
+java -Djava.awt.headless=true -jar "$JUNIT" execute \
+  --class-path "$TEST_OUT" --scan-class-path --fail-if-no-tests --details summary
+```
 
 ### Minimal console View
 
@@ -346,6 +355,11 @@ Bob-to-Carol card/photo advancement. David confirmed Jaden manually tested
 mutual matching, messaging/replies, and Carol account isolation. Separate human
 code review remains unconfirmed. Gowri's original implementation credit is preserved as confirmed
 by David. Git commit metadata alone is not used as proof of contribution.
+
+David reports that Gowri, Varooni, and Jaden have each personally read and
+confirmed their Attribution entries and agreed D4 responsibilities. This is
+team confirmation reported through David, separate from the automated test
+results and from a detailed source-code review.
 
 All paths below are under `src/spotter/`. This table includes every current
 class/enum and test file. LinkedQueue's private Node class is included in its
