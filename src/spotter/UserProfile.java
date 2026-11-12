@@ -5,6 +5,10 @@ import java.util.Map;
 
 public class UserProfile
 {
+    private String goal = "";
+    private String gym = "";
+    private String preferredTime = "";
+    private String bio = "";
     private final int userId;
     private String name;
     private int age;
@@ -38,6 +42,26 @@ public class UserProfile
         this.workoutExperience = new HashMap<>(workoutExperience);
     }
     
+    public UserProfile(int userId, String name, int age,
+        Map<String, String> workoutExperience, String goal, String gym,
+        String preferredTime, String bio)
+    {
+        this(userId, name, age, workoutExperience);
+        if (goal == null || gym == null || preferredTime == null || bio == null)
+        {
+            throw new IllegalArgumentException("Profile details cannot be null");
+        }
+        this.goal = goal.trim();
+        this.gym = gym.trim();
+        this.preferredTime = preferredTime.trim();
+        this.bio = bio.trim();
+    }
+
+    public String getGoal() { return goal; }
+    public String getGym() { return gym; }
+    public String getPreferredTime() { return preferredTime; }
+    public String getBio() { return bio; }
+
     public int getUserId()
     {
         return userId;

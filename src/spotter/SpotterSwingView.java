@@ -15,7 +15,7 @@ public class SpotterSwingView extends SpotterView
     private static final Color MUTED = new Color(149, 174, 158);
     private final JPanel panel = new JPanel(new BorderLayout(24, 24));
     private final JLabel name = new JLabel("Discover", SwingConstants.CENTER);
-    private final JLabel details = new JLabel("", SwingConstants.CENTER);
+    private final JTextArea details = new JTextArea();
     private final JLabel avatar = new JLabel("S", SwingConstants.CENTER);
     private final JLabel status = new JLabel("Like someone to get started.");
     private final JButton pass = button("Pass", "pass");
@@ -73,6 +73,12 @@ public class SpotterSwingView extends SpotterView
         identity.add(avatar);
         identity.add(name);
         details.setForeground(MUTED);
+        details.setName("details");
+        details.setBackground(SURFACE);
+        details.setEditable(false);
+        details.setLineWrap(true);
+        details.setWrapStyleWord(true);
+        details.setFont(new Font("SansSerif", Font.PLAIN, 13));
         identity.add(details);
         card.add(identity, BorderLayout.CENTER);
         JPanel actions = new JPanel(new GridLayout(1, 2, 16, 0));
@@ -226,7 +232,9 @@ public class SpotterSwingView extends SpotterView
         like.setEnabled(available);
         avatar.setText(available ? profile.getName().substring(0, 1).toUpperCase() : "-");
         name.setText(available ? profile.getName() + ", " + profile.getAge() : "All caught up");
-        details.setText(available ? profile.getWorkoutExperience().toString()
+        details.setText(available ? "Interests: " + profile.getWorkoutExperience()
+            + "\nGoal: " + profile.getGoal() + "\nGym: " + profile.getGym()
+            + "\nTime: " + profile.getPreferredTime() + "\nAbout: " + profile.getBio()
             : "No eligible profiles left. Try another demo account.");
     }
 

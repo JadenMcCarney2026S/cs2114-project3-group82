@@ -23,6 +23,8 @@ public class SpotterView
         showInfo("\n--- NEXT PROFILE ---");
         showInfo("Profile " + profile.getUserId() + ": " + profile.getName()
             + ", age " + profile.getAge() + ", " + profile.getWorkoutExperience());
+        showInfo("Goal: " + profile.getGoal() + " | Gym: " + profile.getGym());
+        showInfo("Time: " + profile.getPreferredTime() + " | About: " + profile.getBio());
     }
 
     public void showMatches(List<UserProfile> matches)
