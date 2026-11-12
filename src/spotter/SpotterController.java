@@ -10,6 +10,7 @@ public class SpotterController
     private final Map<Integer, MainLogic> sessions;
     private final SpotterView view;
     private MainLogic model;
+    private int currentUserId;
 
     public SpotterController(Map<Integer, MainLogic> sessions, int currentUserId,
         SpotterView view)
@@ -21,6 +22,7 @@ public class SpotterController
         }
         this.sessions = new LinkedHashMap<>(sessions);
         this.model = sessions.get(currentUserId);
+        this.currentUserId = currentUserId;
         this.view = view;
     }
 
@@ -81,11 +83,15 @@ public class SpotterController
 
     public void run(Scanner input)
     {
-        view.showInfo("Commands: profile, left, right, matches, send <id> <text>, "
-            + "chat <id>, user <id>, help, quit");
+        view.showMenu();
         displayNextProfile();
-        while (input.hasNextLine())
+        while (true)
         {
+            view.showPrompt(currentUserId);
+            if (!input.hasNextLine())
+            {
+                break;
+            }
             if (!handleCommand(input.nextLine()))
             {
                 return;
@@ -124,8 +130,7 @@ public class SpotterController
                         case "right": handleSwipe(SwipeAction.RIGHT); break;
                         case "matches": displayMatches(); break;
                         case "help":
-                            view.showInfo("profile | left | right | matches | "
-                                + "send <id> <text> | chat <id> | user <id> | quit");
+                            view.showMenu();
                             break;
                         case "quit": view.showInfo("Goodbye."); return false;
                         default: break;
@@ -155,6 +160,7 @@ public class SpotterController
                     else if (sessions.containsKey(id))
                     {
                         model = sessions.get(id);
+                        currentUserId = id;
                         view.showInfo("Active user: " + id);
                         displayNextProfile();
                     }
