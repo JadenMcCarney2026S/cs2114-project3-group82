@@ -26,6 +26,23 @@ public class SpotterController
         this.view = view;
     }
 
+    /** Register an in-memory demo identity and offer eligible profiles both ways. */
+    public boolean addDemoUser(UserProfile user)
+    {
+        if (user == null || sessions.containsKey(user.getUserId()))
+        {
+            return false;
+        }
+        MainLogic newSession = new MainLogic(user, model.getChatManager());
+        for (MainLogic session : sessions.values())
+        {
+            newSession.addProfile(session.getCurrentUser());
+            session.addProfile(user);
+        }
+        sessions.put(user.getUserId(), newSession);
+        return true;
+    }
+
     public UserProfile displayNextProfile()
     {
         UserProfile profile = model.getNextProfile();

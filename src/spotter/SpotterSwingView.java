@@ -53,6 +53,10 @@ public class SpotterSwingView extends SpotterView
         users.setBackground(SURFACE);
         users.setForeground(INK);
         account.add(users);
+        JButton create = button("Create profile", "create");
+        create.setPreferredSize(new Dimension(170, 48));
+        create.addActionListener(event -> showCreateProfile());
+        account.add(create);
         header.add(account, BorderLayout.EAST);
         panel.add(header, BorderLayout.NORTH);
 
@@ -160,7 +164,8 @@ public class SpotterSwingView extends SpotterView
             matches.clearSelection();
             conversation.setText("");
             message.setText("");
-            controller.handleCommand("user " + (users.getSelectedIndex() + 1));
+            String selectedUser = (String)users.getSelectedItem();
+            controller.handleCommand("user " + selectedUser.substring(selectedUser.lastIndexOf(" / ") + 3));
             controller.displayMatches();
             updateComposer();
         });
@@ -181,6 +186,65 @@ public class SpotterSwingView extends SpotterView
         controller.displayMatches();
         updateComposer();
         showInfo("Alice likes Bob? Switch to Bob and like Alice to create a real match.");
+    }
+
+    private void showCreateProfile()
+    {
+        JTextField[] fields = new JTextField[6];
+        String[] labels = { "Name", "Age", "Goal (optional)", "Gym (optional)",
+            "Preferred time (optional)", "About me (optional)" };
+        JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
+        for (int i = 0; i < 6; i++)
+        {
+            fields[i] = new JTextField();
+            form.add(new JLabel(labels[i]));
+            form.add(fields[i]);
+        }
+        JComboBox<String> activity = new JComboBox<>(new String[] {
+            "Running", "Swimming", "Strength training", "Cycling" });
+        JComboBox<String> level = new JComboBox<>(new String[] {
+            "Beginner", "Intermediate", "Advanced" });
+        form.add(new JLabel("Workout interest"));
+        form.add(activity);
+        form.add(new JLabel("Experience"));
+        form.add(level);
+        while (JOptionPane.showConfirmDialog(panel, form, "Create demo profile",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION)
+        {
+            try
+            {
+                UserProfile user = new UserProfile(users.getItemCount() + 1,
+                    fields[0].getText(), Integer.parseInt(fields[1].getText().trim()),
+                    java.util.Map.of((String)activity.getSelectedItem(),
+                        (String)level.getSelectedItem()), fields[2].getText(),
+                    fields[3].getText(), fields[4].getText(), fields[5].getText());
+                if (createDemoProfile(user))
+                {
+                    return;
+                }
+            }
+            catch (IllegalArgumentException exception)
+            {
+                JOptionPane.showMessageDialog(panel,
+                    "Enter a name and a positive whole-number age.",
+                    "Check profile", JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
+    public boolean createDemoProfile(UserProfile user)
+    {
+        if (!controller.addDemoUser(user))
+        {
+            showError("Profile ID already exists or profile is missing.");
+            return false;
+        }
+        users.addItem(user.getName() + " / " + user.getUserId());
+        users.setSelectedIndex(users.getItemCount() - 1);
+        controller.handleCommand("user " + user.getUserId());
+        controller.displayMatches();
+        showInfo("Demo profile created. Data is kept until this app closes.");
+        return true;
     }
 
     private static JButton button(String text, String componentName)

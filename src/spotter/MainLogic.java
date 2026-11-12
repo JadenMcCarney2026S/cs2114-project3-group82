@@ -31,6 +31,16 @@ public class MainLogic
         matchManager = chatManager.getMatchManager();
     }
 
+    UserProfile getCurrentUser()
+    {
+        return currentUser;
+    }
+
+    ChatManager getChatManager()
+    {
+        return chatManager;
+    }
+
     public boolean addProfile(UserProfile profile)
     {
         if (profile == null || profile.getUserId() == currentUser.getUserId()
