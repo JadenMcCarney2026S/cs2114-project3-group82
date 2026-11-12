@@ -138,25 +138,40 @@ switching, not authentication. Profiles use initial avatars, not photographs.
 SpotterApp.createSessions is shared by console and desktop launchers; each new
 launch starts fresh in-memory state. The original console remains available.
 
+### Create a demo profile
+
+In the desktop window, click **Create profile**. Enter a name, positive integer
+age, workout interest and experience; goal, gym, preferred time and bio are
+optional. Invalid name/age inputs keep the form open with an error. Cancel
+leaves the sessions unchanged. The app assigns an ID and switches to the new
+profile. Existing users see the new candidate if they share a workout interest;
+mutual likes are still required for messaging. New accounts share the same
+in-memory managers. Closing the application loses created profiles.
+
+The profile card and console show these additional details. They do not affect
+filtering or mutual-match rules. Existing UserProfile constructor callers still
+work. The original fixed demo accounts are sample data.
+
 ### Verified results
 
 On Java 17.0.12, compilation succeeded and these tests were actually executed:
 
 | Test file | Result | Coverage |
 | --- | --- | --- |
+| `UserProfileTest.java` | 2/2 passed | Optional profile information, original constructor compatibility, invalid name/age/null detail rejection. |
 | `LinkedQueueTest.java` | 10/10 passed | FIFO, peek, size/empty state, null rejection, empty exceptions, reuse after draining. |
 | `ProfileManagerTest.java` | 7/7 passed | Eligibility, self/duplicate exclusion, FIFO removal, empty access, no re-addition after removal. |
 | `MainLogicTest.java` | 11/11 passed | Actual two-user swipes, mutual matches, null/left swipes, history, filtering, empty queues, messaging and unauthorized access. |
 | `SpotterControllerTest.java` | 3/3 passed after correction | Console workflow, invalid commands/IDs, empty queues, message rejection, EOF. |
-| `SpotterSwingViewTest.java` | 2/2 passed | Actual button-driven reciprocal match/chat, blank-message rejection, account isolation, pass and exhausted queues. |
+| `SpotterSwingViewTest.java` | 3/3 passed | Actual button-driven reciprocal match/chat, blank-message rejection, account isolation, pass and exhausted queues. |
 
-The model-only run passed 28 tests without compiling View or Controller code.
+The earlier model-only run passed 28 tests without compiling View or Controller code.
 The separate Controller run passed 3 tests. Separate console processes also
 completed the two-user workflow, malformed-input/empty-queue checks, and an
 immediate EOF check with exit code 0 and no unhandled exception. Inputs included
 blank/unknown commands, nonnumeric and overflowing IDs, unknown users, missing
 arguments, empty messages, and unmatched messaging. `git diff --check` passed.
-After adding the desktop View, all 33 tests passed with `-Djava.awt.headless=true`.
+After adding the desktop View, all 36 tests passed with `-Djava.awt.headless=true`.
 The desktop panel was also rendered at 960 x 650 and visually inspected.
 Launching the native JFrame from the tool environment terminated with exit code
 134 and no diagnostic output; native window interaction therefore remains
@@ -207,13 +222,13 @@ unconfirmed; the supplied revised specification is the available reference.
 
 ### Unfinished work and test limits
 
-The implemented console MVP path has been exercised. It does not provide
-profile creation/editing commands, persistent storage, authentication, location
+The implemented console MVP path has been exercised. The desktop now creates profiles; console creation and profile editing remain
+absent. It does not provide persistent storage, authentication, location
 matching, workout history, or shared routines. Separate ProfileView,
 MatchesView, and ChatView classes are absent intentionally.
 
 No known executed test remains failing after the Controller correction.
-There are no dedicated UserProfile, Message, MatchManager, or ChatManager test
+There are no dedicated Message, MatchManager, or ChatManager test
 files; MainLogic tests cover only some of their behavior. Constructor map-entry
 validation, direct profile-edit validation, timestamp behavior, and restoring
 matched-profile lists after rebuilding a session lack dedicated regression
@@ -289,7 +304,8 @@ file's row.
 
 | File | Actual contribution supported by available information |
 | --- | --- |
-| UserProfile.java | Gowri: original implementation (user-confirmed). Codex: inspected; no production changes. |
+| UserProfile.java | Gowri: original implementation (user-confirmed). Codex: added optional goal/gym/time/bio fields and compatible constructor; tested validation. |
+| UserProfileTest.java | Codex: generated and executed 2 profile constructor/detail validation tests. Human reviewer/tester unconfirmed. |
 | LinkedQueue.java | Gowri: original implementation including Node (user-confirmed). Codex: inspected; no production changes; exercised through tests. |
 | ProfileManager.java | Gowri: original implementation (user-confirmed). Codex: revised addProfile return value and checked callers/tests. |
 | LinkedQueueTest.java | Gowri: original tests (user-confirmed). Codex: added two edge-case tests and executed suite. |
@@ -304,7 +320,7 @@ file's row.
 | SpotterController.java | Codex: generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Human reviewer/tester unconfirmed. |
 | SpotterApp.java | Codex: generated demo wiring; executed separate console processes. Human reviewer/tester unconfirmed. |
 | SpotterSwingView.java | Codex: generated optional Swing card/chat View, rendered preview, and exercised button events headlessly. Human reviewer/tester unconfirmed. |
-| SpotterSwingViewTest.java | Codex: generated and executed 2 desktop interaction tests. Human reviewer/tester unconfirmed. |
+| SpotterSwingViewTest.java | Codex: generated and executed 3 desktop interaction tests, including creating a profile and matching/messaging with an existing account. Human reviewer/tester unconfirmed. |
 | SpotterControllerTest.java | Codex: generated and executed 3 integration tests. Human reviewer/tester unconfirmed. |
 
 Codex also updated `.classpath` and this README at the user's request. The
