@@ -13,8 +13,28 @@ Select Project > Clean to rebuild, then right-click each of
 10 Queue tests, 7 profile-manager tests, and 11 core-workflow tests.
 They exercise the model directly without a View or Controller.
 
-No application or View launcher exists yet; these instructions run only the
-independent model tests.
+## Run the console prototype (Step 6)
+
+In Eclipse, right-click `src/spotter/SpotterApp.java` and select Run As > Java
+Application. Alternatively, from the repository root with JDK 17:
+
+```sh
+mkdir -p /tmp/group82-console
+javac -d /tmp/group82-console $(rg --files src/spotter -g '*.java' -g '!*Test.java')
+java -cp /tmp/group82-console spotter.SpotterApp
+```
+
+The sample users are 1 Alice and 2 Bob (Running), and 3 Carol (Swimming).
+Start as Alice: `profile`, `right`, `user 2`, `right`, `matches`,
+`send 1 Hello Alice`, `user 1`, `chat 2`. Both users must actually like each
+other before messaging succeeds. `left`, `help`, and `quit` are also available.
+`user <id>` switches existing demo sessions, not authenticated accounts.
+Invalid commands and IDs display errors; exhausted queues display a message.
+EOF exits cleanly. State lasts only until the program exits.
+
+Run `SpotterControllerTest` as a JUnit test separately for console/controller
+integration coverage. The 28 model-only tests above remain independent of the
+View and Controller.
 
 ## Core model workflow (Step 5)
 
@@ -39,7 +59,8 @@ Specification clarifications:
 Remaining limits: state is in memory only. A newly constructed MainLogic for
 an existing user retains shared swipe history and conversation access, but does
 not restore its local profile catalog or matched-profile list. There is no
-profile repository/refresh operation, login/authentication, View, or Controller.
+profile repository/refresh operation or login/authentication. Step 6 adds a
+minimal console View and Controller; the model remains independent of them.
 The caller supplies the current user identity; this is a local model prototype.
 The D4 shared-workout feature remains unimplemented.
 
