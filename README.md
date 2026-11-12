@@ -1,6 +1,48 @@
 # cs2114-project3-group82
 Gym partner finder
 
+## Run the independent model tests
+
+Use JDK 17 and Eclipse with Java and JUnit 5 support. Import this folder using
+File > Import > General > Existing Projects into Workspace. The project
+classpath includes the Eclipse JUnit 5 library.
+
+Select Project > Clean to rebuild, then right-click each of
+`src/spotter/LinkedQueueTest.java`, `src/spotter/ProfileManagerTest.java`, and
+`src/spotter/MainLogicTest.java` and select Run As > JUnit Test. There are
+10 Queue tests, 7 profile-manager tests, and 11 core-workflow tests.
+They exercise the model directly without a View or Controller.
+
+No application or View launcher exists yet; these instructions run only the
+independent model tests.
+
+## Core model workflow (Step 5)
+
+Create one `MatchManager`, then one `ChatManager(matchManager)`. Pass that same
+ChatManager to each user's `MainLogic(user, chatManager)` so actual reciprocal
+swipes and messages share state. `MainLogic(user)` creates an isolated model.
+`MainLogicTest` demonstrates profile retrieval, swiping to the next profile,
+mutual matching, and authorized two-way messaging without a View.
+
+Specification clarifications:
+- Messaging methods use integer user IDs, matching `UserProfile`, instead of
+  the specification's inconsistent String ID parameters.
+- `swipeCurrentProfile` returns the newly matched profile, or null if no new
+  match was created. Null also covers invalid actions and empty queues; it is
+  not a swipe-success flag. LEFT and RIGHT are the supported actions.
+- `ProfileManager.addProfile` now returns whether it enqueued the profile, so
+  MainLogic can reuse its eligibility checks. Existing statement-style callers
+  still work. ProfileManager still throws for null; MainLogic returns false.
+- Unauthorized conversation reads return an empty list; returned lists are
+  copies. Chat history is formatted as `senderId: content`.
+
+Remaining limits: state is in memory only. A newly constructed MainLogic for
+an existing user retains shared swipe history and conversation access, but does
+not restore its local profile catalog or matched-profile list. There is no
+profile repository/refresh operation, login/authentication, View, or Controller.
+The caller supplies the current user identity; this is a local model prototype.
+The D4 shared-workout feature remains unimplemented.
+
 REFLECTION
 
 During Deliverable 3, we implemented the Profile & Queue Model using 
