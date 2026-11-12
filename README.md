@@ -41,13 +41,13 @@ path is not included in the repository and may not exist on another computer.
 ```sh
 MODEL_OUT=$(mktemp -d /tmp/group82-model.XXXXXX)
 javac -d "$MODEL_OUT" -cp "$JUNIT" \
-  $(rg --files src/spotter -g '*.java' | rg -v '/Spotter')
+  $(rg --files src/spotter -g '*.java' | rg -v '/(Spotter|ProfileView|MatchesView|ChatView)')
 java -jar "$JUNIT" execute --class-path "$MODEL_OUT" \
   --scan-class-path --fail-if-no-tests --details summary
 ```
 
-This compilation excludes every `Spotter*` file, including the View,
-Controller, application launcher, and Controller tests.
+This compilation excludes every View, Controller, launcher, and UI test file,
+including the separately merged ProfileView, MatchesView, and ChatView.
 
 ### Controller tests
 
@@ -172,27 +172,55 @@ On Java 17.0.12, compilation succeeded and these tests were actually executed:
 
 | Test file | Result | Coverage |
 | --- | --- | --- |
-| `UserProfileTest.java` | 2/2 passed | Optional profile information, original constructor compatibility, invalid name/age/null detail rejection. |
+| `UserProfileTest.java` | 5/5 passed | Constructor/detail validation, valid and rejected edits, unchanged state after invalid edits, defensive map copies. |
 | `LinkedQueueTest.java` | 10/10 passed | FIFO, peek, size/empty state, null rejection, empty exceptions, reuse after draining. |
 | `ProfileManagerTest.java` | 7/7 passed | Eligibility, self/duplicate exclusion, FIFO removal, empty access, no re-addition after removal. |
 | `MainLogicTest.java` | 11/11 passed | Actual two-user swipes, mutual matches, null/left swipes, history, filtering, empty queues, messaging and unauthorized access. |
 | `SpotterControllerTest.java` | 3/3 passed after correction | Console workflow, invalid commands/IDs, empty queues, message rejection, EOF. |
 | `SpotterSwingViewTest.java` | 4/4 passed | Actual button-driven reciprocal match/chat, blank-message rejection, account isolation, pass and exhausted queues. |
+| `ProfileViewTest.java` | 4/4 passed | Profile formatting, missing fields, swipe options, empty state. |
+| `MatchesViewTest.java` | 4/4 passed | Match formatting, empty lists, new-match banner. |
+| `ChatViewTest.java` | 5/5 passed | Conversation formatting, missing names, empty history, prompts. |
+| `SpotterViewTest.java` | 12/12 passed | Teammate View API, injected input/output, input trimming and EOF. |
 
-The earlier model-only run passed 28 tests without compiling View or Controller code.
+The current model-only run passed 33 tests without compiling any View or
+Controller code. The current full run passed 65 tests (33 model + 32 UI).
 The separate Controller run passed 3 tests. Separate console processes also
 completed the two-user workflow, malformed-input/empty-queue checks, and an
 immediate EOF check with exit code 0 and no unhandled exception. Inputs included
 blank/unknown commands, nonnumeric and overflowing IDs, unknown users, missing
 arguments, empty messages, and unmatched messaging. `git diff --check` passed.
-After adding the desktop View, all 37 tests passed with `-Djava.awt.headless=true`.
+The current full run used `-Djava.awt.headless=true`; all 65 tests passed.
 The photo-enabled desktop panels were rendered at 960 x 820 for all four
 demo profiles and visually inspected. A regression test loads every demo photo
 and checks that new/empty profiles clear the previous image.
-Launching the native JFrame from the tool environment terminated with exit code
-134 and no diagnostic output; native window interaction therefore remains
-unverified. Run it in the local IDE/desktop to check the actual window. These results do not
+Launching the native JFrame from the tool environment previously terminated
+with exit code 134. David subsequently confirmed a successful local GUI launch:
+Bob's card/photo appeared, and Pass advanced to Carol's card/photo. This is
+user-reported manual verification of launch and profile advancement. David also
+confirmed that Jaden completed the manual reciprocal-like, match-selection,
+message/reply, and Carol account-isolation checks. These manual results are
+team-reported, separate from the automated runs above. These results do not
 establish that every possible input or UI environment works.
+
+### D3 rubric evidence and final checks
+
+| Criterion | Evidence | Remaining confirmation |
+| --- | --- | --- |
+| Model Works / Exceeds | LinkedQueueTest: 10 passing Queue tests; 33 model-only tests with no UI compiled. | Team can explain front/rear links and FIFO. |
+| Thin View / Exceeds | Console and Swing actions call SpotterController, then MainLogic; model has no UI imports. | David confirmed local launch and Bob-to-Carol card/photo advancement. |
+| Runs Without Crashing / Exceeds | Full workflow, null/left/duplicate swipes, exhausted queues, bad commands/IDs, rejected messages and unauthorized reads have passing tests. | Jaden completed manual mutual matching, messaging/replies, and Carol account-isolation checks (confirmed by David). |
+| Reflection / Exceeds | Each implementation deviation below names its actual trigger or test failure. | Team factual review. |
+| Next Steps / Exceeds | Shared-workout proposal names methods, unchanged classes, normal/bad-input tests, and confirmed owners. | D4 feature is planned, not implemented. |
+| Attribution + GenAI | Every current Java file has a row; David's AI-assisted work, Gowri's original work and Varooni's merged work are distinguished. | Completed contributions are listed per file, including Jaden's team-reported manual integration tests; planned D4 work remains separate. |
+
+Bad-input evidence: LinkedQueueTest covers null and empty operations;
+ProfileManagerTest covers self/duplicates/filtering/empty access;
+UserProfileTest covers invalid construction and rejected edits preserving state;
+MainLogicTest covers null swipes preserving queue/history, duplicate decisions,
+empty queues/messages and unmatched conversation access;
+SpotterControllerTest covers malformed commands/IDs and EOF. These tests prove
+the named cases, not exhaustive input coverage or authenticated user security.
 
 ## Reflection
 
@@ -207,7 +235,7 @@ establish that every possible input or UI environment works.
 | Messaging signatures use String IDs, while profile IDs and swipe maps use integers. | Messaging APIs use integer IDs consistently. | Inspection exposed conflicting ID types; no existing messaging callers needed migration. |
 | A swipe returns a newly matched profile or null. | Preserved this contract. Null can mean a valid nonmatching swipe, invalid action, or empty queue. The Controller checks action/queue before displaying an outcome. | Specification review showed null cannot be treated as a general swipe-success flag. Null-action, left-swipe, and empty-queue tests cover the separate cases. |
 | Conversations are available only to matches. | Model authorization checks reciprocal likes. Unauthorized reads return an empty list; results are copies. Messages include sender, content, and timestamp; console history displays sender and text. | Tests show unmatched writes store nothing and an outsider cannot read an existing private conversation. |
-| SpotterView coordinates separate profile, match, and chat View classes; Controller takes one model and View. | One thin SpotterView formats all three outputs. SpotterController accepts existing user sessions, active ID, and View; SpotterApp wires sample profiles and shared state. | No View existed to reuse. A minimal console and session switching demonstrate both real users without extra presentation classes or hardcoded matches. |
+| SpotterView coordinates separate profile, match, and chat View classes; Controller takes one model and View. | Initially built one thin console View and later a Swing View. Varooni's three formatting Views were then merged and made available through SpotterView compatibility APIs. Controller accepts existing sessions, an active ID, and a View. | No View was present in the initial checkout. The later merge produced 15 test compilation errors due to differing APIs; compatibility methods fixed the mismatch and JUnit annotations enabled the 25 teammate tests. |
 | Console input should not crash the MVP. | Controller parses commands and integer IDs; model still enforces business rules. | The first Controller test run failed 3/3 because `Map.of(...).containsValue(null)` throws. Replaced that null check; all 3 tests then passed. Process checks also exercised bad input and EOF. |
 
 The workout-experience map, FIFO filtering, and duplicate prevention already
@@ -217,8 +245,8 @@ section, not its earlier, broader list of gender, location, and workout fields.
 
 ### Independence and unknowns
 
-The model imports no View or Controller code. The 28 model tests compile and
-execute with all `Spotter*` sources excluded. Input parsing belongs to the
+The model imports no View or Controller code. The 33 model tests compile and
+execute with Spotter*, ProfileView*, MatchesView*, and ChatView* excluded. Input parsing belongs to the
 Controller; queue rules, eligibility, swipe history, matching, and conversation
 authorization remain in the model. No model rule had to move into the View.
 
@@ -240,13 +268,15 @@ unconfirmed; the supplied revised specification is the available reference.
 
 The implemented console MVP path has been exercised. The desktop now creates profiles; console creation and profile editing remain
 absent. It does not provide persistent storage, authentication, location
-matching, workout history, or shared routines. Separate ProfileView,
-MatchesView, and ChatView classes are absent intentionally.
+matching, workout history, or shared routines. ProfileView, MatchesView, and
+ChatView are now present after merging Varooni's work; their formatting APIs
+are available through compatibility methods in SpotterView. The current
+Controller and Swing flow retain their existing profile-based interfaces.
 
 No known executed test remains failing after the Controller correction.
 There are no dedicated Message, MatchManager, or ChatManager test
 files; MainLogic tests cover only some of their behavior. Constructor map-entry
-validation, direct profile-edit validation, timestamp behavior, and restoring
+validation, timestamp behavior, and restoring
 matched-profile lists after rebuilding a session lack dedicated regression
 tests. Eclipse GUI execution and exhaustive input testing were not performed.
 
@@ -256,20 +286,20 @@ tests. Eclipse GUI execution and exhaustive input testing were not performed.
 
 The demonstrated fixed-session console flow works. The remaining work below
 addresses known gaps and final delivery; optional scope decisions should be
-confirmed before expanding the MVP. Owners are **TBD**, as the user confirmed
-that assignments are not yet known. Specification role assignments are plans,
-not evidence that someone performed or accepted the work.
+confirmed before expanding the MVP. David confirmed the team-agreed assignments
+below. Future ownership does not imply that the work has already been completed.
 
 | Order | Task and expected methods/classes | Verification | Confirmed owner |
 | --- | --- | --- | --- |
-| 1 | Human review of the generated model/UI changes and completion of actual review/test attribution in this README. | Team can explain the queue, reciprocal match state, and access checks; verify attribution per file. | TBD |
-| 2 | Decide whether reconstructing a session is part of the required MVP; if so, restore known profiles/matches through MainLogic constructor/getMatches and shared profile storage, without requeueing swiped IDs. Define profile source before adding refreshProfileQueue. | A matched user rebuilt with shared state still lists the match and conversation; swiped/ineligible candidates remain excluded. | TBD |
-| 3 | Add focused validation and regression tests for UserProfile constructor/setName/setAge/addWorkoutInterest, Message, and any approved restoration change. | Valid inputs succeed; blank/null fields, invalid ages, duplicates, and unauthorized access preserve existing state. | TBD |
-| 4 | Final clean build, model-only tests, Controller tests, console smoke run, and Eclipse launch on the team's submission machine. Reconcile README with those results. | Document observed outcomes; resolve failures before submission. | TBD |
+| 1 | Human review of the generated model/UI changes and completion of actual review/test attribution in this README. | Team can explain the queue, reciprocal match state, and access checks; verify attribution per file. | Jaden (integration lead); all members review their assigned areas |
+| 2 | Decide whether reconstructing a session is part of the required MVP; if so, restore known profiles/matches through MainLogic constructor/getMatches and shared profile storage, without requeueing swiped IDs. Define profile source before adding refreshProfileQueue. | A matched user rebuilt with shared state still lists the match and conversation; swiped/ineligible candidates remain excluded. | David (profile state); Gowri (match/access state); Jaden (integration) |
+| 3 | UserProfile constructor/edit regressions are now complete. Add Message timestamp tests and regression tests for any approved restoration change. | Valid inputs succeed; blank/null fields, invalid ages, duplicates, and unauthorized access preserve existing state. | David (model tests); Gowri (access tests) |
+| 4 | Final clean build, model-only tests, Controller tests, console smoke run, and Eclipse launch on the team's submission machine. Reconcile README with those results. | Document observed outcomes; resolve failures before submission. | Jaden (integration); Varooni (UI); David (model) |
 
-The specification proposed David for profiles/Queue, Gowri for matching and
-messaging, Varooni for Views, and Jaden for Controller work. These are reference
-roles only; no remaining-task owner is inferred from them.
+The confirmed D4 allocation is David for workout models/model tests, Gowri for
+matching/access integration, Varooni for Views/UI tests, and Jaden for Controller
+and integration verification. Confirmed planning is separate from actual file
+contributions recorded below.
 
 ### Proposed D4 change feature: shared workout routines
 
@@ -280,11 +310,11 @@ change. It was optional in the specification and is not part of this built MVP.
 
 | Layer | Expected change (proposed names, not existing APIs) | Confirmed owner |
 | --- | --- | --- |
-| Model | New Workout.addExercise and Workout.getExercises; a pair-keyed WorkoutManager for shared state/access; MainLogic.addWorkoutExercise and MainLogic.getWorkout to authorize and coordinate calls. | TBD |
-| Controller | SpotterController.handleCommand plus addWorkoutExercise/displayWorkout actions to parse exercise inputs and invoke MainLogic. | TBD |
-| View | SpotterView.showWorkout to display routine snapshots and validation feedback. | TBD |
-| Wiring | SpotterApp.main to create and share workout state across existing user sessions. | TBD |
-| Tests | New WorkoutTest/WorkoutManagerTest; extend MainLogicTest and SpotterControllerTest for the reachable shared-routine flow. | TBD |
+| Model | New Workout.addExercise and Workout.getExercises; a pair-keyed WorkoutManager for shared state/access; MainLogic.addWorkoutExercise and MainLogic.getWorkout to authorize and coordinate calls. | David (Workout/state); Gowri (matched-user authorization) |
+| Controller | SpotterController.handleCommand plus addWorkoutExercise/displayWorkout actions to parse exercise inputs and invoke MainLogic. | Jaden |
+| View | SpotterView.showWorkout and SpotterSwingView.showWorkout to display routine snapshots and validation feedback. | Varooni |
+| Wiring | SpotterApp.main to create and share workout state across existing user sessions. | Jaden |
+| Tests | New WorkoutTest/WorkoutManagerTest; extend MainLogicTest and SpotterControllerTest for the reachable shared-routine flow. | David (model); Gowri (access); Varooni (UI); Jaden (integration) |
 
 Expected to remain unchanged: LinkedQueue.enqueue/dequeue/peek/isEmpty/getSize,
 ProfileManager.addProfile/getNextProfile/removeNextProfile, UserProfile,
@@ -307,39 +337,49 @@ not been independently identified. No D4 feature code was added in this step.
 
 ## Attribution
 
-The user confirmed Gowri wrote the five original profile/Queue files, despite
-the specification's planned roles. The table distinguishes that report from
-changes generated and commands executed by Codex in this session. The requesting
-user's team identity and any human review/testing of the generated changes are
-unconfirmed. Git commit author metadata is not treated as proof of authorship.
+David confirmed that he directed the Codex-assisted implementation, integration,
+debugging, and automated verification described below. David is credited for
+that work as **David (Codex-assisted)**. Codex generated/revised code and ran
+the reported checks under his direction; this does not claim independent manual
+authorship without AI assistance. David confirmed manual GUI launch and
+Bob-to-Carol card/photo advancement. David confirmed Jaden manually tested
+mutual matching, messaging/replies, and Carol account isolation. Separate human
+code review remains unconfirmed. Gowri's original implementation credit is preserved as confirmed
+by David. Git commit metadata alone is not used as proof of contribution.
 
-The desktop addition was also generated and tested by Codex at the user's request.
 All paths below are under `src/spotter/`. This table includes every current
 class/enum and test file. LinkedQueue's private Node class is included in its
 file's row.
 
 | File | Actual contribution supported by available information |
 | --- | --- |
-| UserProfile.java | Gowri: original implementation (user-confirmed). Codex: added optional goal/gym/time/bio fields and compatible constructor; tested validation. |
-| UserProfileTest.java | Codex: generated and executed 2 profile constructor/detail validation tests. Human reviewer/tester unconfirmed. |
-| LinkedQueue.java | Gowri: original implementation including Node (user-confirmed). Codex: inspected; no production changes; exercised through tests. |
-| ProfileManager.java | Gowri: original implementation (user-confirmed). Codex: revised addProfile return value and checked callers/tests. |
-| LinkedQueueTest.java | Gowri: original tests (user-confirmed). Codex: added two edge-case tests and executed suite. |
-| ProfileManagerTest.java | Gowri: original tests (user-confirmed). Codex: added return-value assertions and executed suite. |
-| SwipeAction.java | Codex: generated LEFT/RIGHT enum; exercised through workflow tests. Human reviewer/tester unconfirmed. |
-| MainLogic.java | Codex: generated model orchestration; exercised through model and Controller tests. Human reviewer/tester unconfirmed. |
-| MatchManager.java | Codex: generated shared swipe/mutual-like state; exercised through workflow tests. Human reviewer/tester unconfirmed. |
-| ChatManager.java | Codex: generated matched-only messaging and copied conversation output; exercised through workflow tests. Human reviewer/tester unconfirmed. |
-| Message.java | Codex: generated immutable sender/content/timestamp fields and content validation; used by messaging tests. Human reviewer/tester unconfirmed. |
-| MainLogicTest.java | Codex: generated and executed 11 workflow tests. Human reviewer/tester unconfirmed. |
-| SpotterView.java | Codex: generated minimal console formatting; exercised through integration tests/process runs. Human reviewer/tester unconfirmed. |
-| SpotterController.java | Codex: generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Human reviewer/tester unconfirmed. |
-| SpotterApp.java | Codex: generated demo wiring; executed separate console processes. Human reviewer/tester unconfirmed. |
-| SpotterSwingView.java | Codex: generated optional Swing card/chat View, rendered preview, and exercised button events headlessly. Human reviewer/tester unconfirmed. |
-| SpotterSwingViewTest.java | Codex: generated and executed 4 desktop interaction tests, including creating a profile and matching/messaging with an existing account. Human reviewer/tester unconfirmed. |
-| SpotterControllerTest.java | Codex: generated and executed 3 integration tests. Human reviewer/tester unconfirmed. |
+| UserProfile.java | Gowri: original implementation (user-confirmed). David (Codex-assisted): added optional goal/gym/time/bio fields and compatible constructor; tested validation. |
+| UserProfileTest.java | David (Codex-assisted): generated and executed 5 constructor, edit-validation, and defensive-copy tests. |
+| LinkedQueue.java | Gowri: original implementation including Node (user-confirmed). David (Codex-assisted): inspected; no production changes; directed inspection and automated test execution. |
+| ProfileManager.java | Gowri: original implementation (user-confirmed). David (Codex-assisted): revised addProfile return value and checked callers/tests. |
+| LinkedQueueTest.java | Gowri: original tests (user-confirmed). David (Codex-assisted): added two edge-case tests and executed suite. |
+| ProfileManagerTest.java | Gowri: original tests (user-confirmed). David (Codex-assisted): added return-value assertions and executed suite. |
+| SwipeAction.java | David (Codex-assisted): generated LEFT/RIGHT enum; exercised through workflow tests. |
+| MainLogic.java | David (Codex-assisted): generated model orchestration; exercised through model and Controller tests. |
+| MatchManager.java | David (Codex-assisted): generated shared swipe/mutual-like state; exercised through workflow tests. |
+| ChatManager.java | David (Codex-assisted): generated matched-only messaging and copied conversation output; exercised through workflow tests. |
+| Message.java | David (Codex-assisted): generated immutable sender/content/timestamp fields and content validation; used by messaging tests. |
+| MainLogicTest.java | David (Codex-assisted): generated and executed 11 workflow tests. |
+| SpotterView.java | David (Codex-assisted): implemented console View and compatibility methods for Varooni's formatter/input APIs; exercised integration tests/process runs. |
+| SpotterController.java | David (Codex-assisted): generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Jaden: manually tested mutual matching, messaging/replies, and account isolation (confirmed by David). |
+| SpotterApp.java | David (Codex-assisted): generated demo wiring; executed separate console processes. |
+| SpotterSwingView.java | David (Codex-assisted): implemented Swing card/chat View and automated rendering/button checks. David: manually confirmed local launch and Bob-to-Carol card/photo advancement. Jaden: manually tested match selection, messaging/replies, account switching, and Carol conversation isolation (confirmed by David). |
+| SpotterSwingViewTest.java | David (Codex-assisted): generated and executed 4 desktop interaction tests, including creating a profile and matching/messaging with an existing account. |
+| SpotterControllerTest.java | David (Codex-assisted): generated and executed 3 integration tests. |
+| ProfileView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
+| MatchesView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
+| ChatView.java | Varooni: authored (confirmed by David). David (Codex-assisted): integrated existing formatter API. |
+| ProfileViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
+| MatchesViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 4 tests. |
+| ChatViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): enabled Jupiter annotations and executed 5 tests. |
+| SpotterViewTest.java | Varooni: authored (confirmed by David). David (Codex-assisted): adapted console assertions, enabled Jupiter annotations, and executed 12 tests. |
 
-Codex also updated `.classpath` and this README at the user's request. The
+David also directed the Codex-assisted updates to `.classpath` and this README. The
 pre-existing `.project` resource-filter edit was left untouched; its contributor
 is not established here. Team members should confirm substantive contributions
 and human review before submitting; intended ownership is not actual attribution.
@@ -350,7 +390,7 @@ The supplied specification reports ChatGPT assistance with MVC design, method
 signatures, data/state, validation, testing, and scope clarification. That is
 the document's account, not independently verified authorship of source files.
 
-In this session, the user asked Codex to inspect the requirements/repository,
+In this session, David asked Codex to inspect the requirements/repository,
 compare the implementation with the rubric, establish a test baseline, complete
 the independent Queue/model checks, implement the missing core workflow, connect
 a minimal console, and write an evidence-based README. Codex generated the new
@@ -359,11 +399,15 @@ and executed the reported compiler/test/process checks. Existing working Queue
 and profile behavior was reused. Earlier checks used Eclipse's batch compiler;
 Step 6 used javac with Java 17 and the cached JUnit runner.
 
-The user supplied original-file attribution and confirmed stretch-goal choices;
-remaining owners and human review/testing are unconfirmed. The proposed D4
+David supplied original-file attribution and confirmed stretch-goal choices;
+D4 owners are now confirmed by David. David also confirmed local GUI launch
+and Bob-to-Carol card/photo advancement, and reported Jaden's completed manual
+matching/chat/account-isolation checks. Separate human code review remains
+unconfirmed. The proposed D4
 impact prediction above was prepared with Codex assistance and has not been
-validated by implementing the feature. No generated feature is presented as
-human-authored work, and no unexecuted test is reported as passing.
+validated by implementing the feature. David's AI-assisted implementation and
+integration are credited explicitly; generated code is not described as written
+without AI assistance. No unexecuted test is reported as passing.
 
 Carol now shares Running as well as Swimming, so Alice sees Bob, Carol, then
 Dave in FIFO order. This changes demo data only; shared-interest filtering is
