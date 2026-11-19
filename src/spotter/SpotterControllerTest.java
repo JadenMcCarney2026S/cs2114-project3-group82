@@ -51,6 +51,26 @@ class SpotterControllerTest
     }
 
     @Test
+    void testWorkoutRejectsMalformedTargetsAndMissingNumericFields()
+    {
+        controller.run(new Scanner("right\nuser 2\nright\n"
+            + "exercise 1 3 8 0 Push ups\n"
+            + "exercise x 3 8 0 Bad target\nworkout 2147483648\nworkout 1 extra\n"
+            + "exercise 1 2147483648 8 0 Overflow\nworkout 1\n"));
+        assertFalse(controller.addWorkoutExercise(1, "Row", null, "8", "20"));
+        assertFalse(controller.addWorkoutExercise(1, "Row", "3", null, "20"));
+        assertFalse(controller.addWorkoutExercise(1, "Row", "3", "8", null));
+
+        String text = output.toString();
+        assertTrue(text.contains("User ID must be a 32-bit integer"));
+        assertTrue(text.contains("Usage: workout"));
+        assertTrue(text.contains("Sets and reps must be whole numbers"));
+        assertTrue(text.contains("Enter sets, reps, and weight"));
+        assertEquals(java.util.List.of(new Workout.Exercise("Push ups", 3, 8, 0)),
+            alice.getWorkout(2));
+    }
+
+    @Test
     void testConsoleWorkflowUsesRealReciprocalSwipes()
     {
         controller.run(new Scanner("profile\nright\nmatches\nuser 2\nright\n"

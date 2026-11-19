@@ -50,7 +50,7 @@ java -jar "$JUNIT" execute --class-path "$MODEL_OUT" \
 
 This compilation excludes every View, Controller, launcher, and UI test file,
 including the separately merged ProfileView, MatchesView, and ChatView.
-The D4 verification run passed 43 independent model tests and 86 tests in the
+The D4 verification run passed 44 independent model tests and 88 tests in the
 full desktop and HTTPS suite. The console guided demo was also run through
 completion with the shared-workout steps.
 
@@ -399,6 +399,26 @@ For the next shared feature, making the shared demo session construction
 available through one factory would reduce wiring in both the launcher and
 the new-profile path.
 
+The grading demo uses `SpotterApp` and the console `SpotterView`.
+`SpotterView` holds input and output handles. It displays profiles, matches,
+and workout snapshots supplied by the Controller during each call. The model
+owns the candidate queue and shared workout. The Swing and LAN clients have
+separate presentation state.
+
+The workout changes can be checked independently of the earlier live-chat work:
+
+```sh
+git show --stat 858c6c8
+git diff --name-only 432124f..858c6c8 -- \
+  src/spotter/LinkedQueue.java src/spotter/ProfileManager.java \
+  src/spotter/UserProfile.java src/spotter/Message.java \
+  src/spotter/ChatManager.java src/spotter/MatchManager.java
+```
+
+The second command produces no paths. Across the wider project history,
+`ChatManager` changed for earlier live-chat and LAN history support. The
+shared workout reuses the existing match check without changing it.
+
 ### What remains
 
 Workouts are in memory, can be appended and read, and are available in the
@@ -431,6 +451,13 @@ persistence until the graded desktop flow is complete.
 | 1:05–1:55 | Bob creates two exercises. Alice reads the same routine in order. | `exercise 1 3 12 0 Push ups`, `exercise 1 3 8 25 Dumbbell press`, `user 1`, `workout 2` |
 | 1:55–2:30 | Invalid sets are rejected, and Carol cannot read or write Alice’s routine. | `exercise 2 0 8 25 Invalid`, `user 3`, `workout 1`, `exercise 1 3 8 0 Push ups` |
 | 2:30–3:00 | Show the passing interleaved FIFO and workout model tests and explain the shared store. | Open `LinkedQueueTest` and `WorkoutManagerTest`. |
+
+Before the timer starts, build and run the model-only tests, then leave their
+passing summary open. Launch a fresh `SpotterApp` and keep the commands above
+beside it. During the demo, explain that removing Alice's front entry leaves
+Carol at the front and that both directions of a matched pair resolve to the
+same workout key. Point to the invalid-set error and Carol's empty read before
+showing the test summary. Time one spoken run on the submission machine.
 
 ## Attribution
 

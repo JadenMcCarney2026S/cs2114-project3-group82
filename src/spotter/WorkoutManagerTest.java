@@ -13,6 +13,25 @@ class WorkoutManagerTest
     }
 
     @Test
+    void oneSidedLikeCannotReadOrChangeTheRoutine()
+    {
+        MatchManager matches = new MatchManager();
+        WorkoutManager workouts = new WorkoutManager(matches);
+        matches.recordSwipe(1, 2, SwipeAction.RIGHT);
+
+        assertFalse(workouts.addWorkoutExercise(1, 2, "Push-up", 3, 10, 0));
+        assertFalse(workouts.addWorkoutExercise(2, 1, "Push-up", 3, 10, 0));
+        assertTrue(workouts.getWorkout(1, 2).isEmpty());
+        assertTrue(workouts.getWorkout(2, 1).isEmpty());
+
+        matches.recordSwipe(2, 1, SwipeAction.RIGHT);
+        assertTrue(workouts.getWorkout(1, 2).isEmpty());
+        assertTrue(workouts.addWorkoutExercise(1, 2, "Push-up", 3, 10, 0));
+        assertEquals(List.of(new Workout.Exercise("Push-up", 3, 10, 0)),
+            workouts.getWorkout(2, 1));
+    }
+
+    @Test
     void rejectsInvalidExercisesWithoutChangingTheRoutine()
     {
         MatchManager matches = new MatchManager();
