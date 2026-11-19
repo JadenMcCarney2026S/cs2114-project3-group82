@@ -1,6 +1,7 @@
 package spotter;
 
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
@@ -25,6 +26,12 @@ final class SpotterLanOnboarding
 {
     private static final int PREVIEW_EDGE = 160;
     private static final int MAX_PHOTO_DIMENSION = 4096;
+    private static final String ACCOUNT_GUIDANCE =
+        "Use 3–32 letters, digits, or underscores for your username and 12–128 characters for your password.";
+    private static final String PHOTO_GUIDANCE =
+        "Choose a JPEG or PNG up to 2 MB and no larger than 4096 × 4096 pixels.";
+    private static final String PROFILE_GUIDANCE =
+        "Add a display name, an age of 18 or older, a workout interest, and a photo.";
 
     record Photo(byte[] bytes, ImageIcon preview)
     {
@@ -44,6 +51,7 @@ final class SpotterLanOnboarding
         this.onComplete = onComplete;
         address.setText(server == null ? "https://127.0.0.1:8080/chat" : server.toString());
         status.putClientProperty("html.disable", true);
+        status.setForeground(SpotterLanStyle.MUTED);
         status.setText(notice);
         showLogin();
         window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
@@ -57,17 +65,21 @@ final class SpotterLanOnboarding
         addField(form, "Server URL", address);
         addField(form, "Username", username);
         addField(form, "Password", password);
-        JPanel actions = new JPanel();
-        JLabel requirements = new JLabel("<html>Sign-up username: 3–32 letters, digits, or underscores.<br>"
-            + "Password: 12–128 characters.</html>");
+        JPanel actions = actions();
+        JLabel requirements = new JLabel("<html>New accounts need a username of 3–32 letters, digits,"
+            + " or underscores<br>and a password of 12–128 characters.</html>");
+        requirements.setForeground(SpotterLanStyle.MUTED);
+        requirements.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
         form.add(requirements);
         JButton login = new JButton("Log in");
         JButton signUp = new JButton("Sign up");
-        actions.add(login);
+        SpotterLanStyle.button(login, true);
+        SpotterLanStyle.button(signUp, false);
         actions.add(signUp);
+        actions.add(login);
         login.addActionListener(event -> authenticate(false, login, signUp));
         signUp.addActionListener(event -> authenticate(true, login, signUp));
-        show(form, actions, login);
+        show("Find your training partner", form, actions, login);
     }
 
     private void authenticate(boolean signUp, JButton login, JButton register)
@@ -80,7 +92,9 @@ final class SpotterLanOnboarding
         }
         catch (IllegalArgumentException error)
         {
-            status.setText("Enter an HTTPS server URL ending in /chat.");
+            showError("Check the server address", "The server URL is invalid.",
+                "Enter the HTTPS address provided by your host, ending in /chat.");
+            address.requestFocusInWindow();
             return;
         }
         String name = username.getText().trim();
@@ -89,10 +103,16 @@ final class SpotterLanOnboarding
         if (name.isEmpty() || entry.length == 0)
         {
             Arrays.fill(entry, '\0');
-            status.setText("Enter a username and password.");
+            showError("Enter your account details", "A username and password are required.",
+                signUp ? ACCOUNT_GUIDANCE : "Enter the username and password you used to sign up.");
+            (name.isEmpty() ? username : password).requestFocusInWindow();
             return;
         }
-        work("Connecting…", () -> {
+        work("Connecting…", signUp ? "Couldn’t sign up" : "Couldn’t log in",
+            signUp ? ACCOUNT_GUIDANCE + " If you already have an account, log in instead. "
+                + "If the server is unavailable, confirm the host’s HTTPS address."
+                : "Check your username and password. If the server is unavailable, confirm the host’s HTTPS address.",
+            () -> {
             try
             {
                 String passwordText = new String(entry);
@@ -128,25 +148,34 @@ final class SpotterLanOnboarding
         addField(form, "Bio (optional)", bio);
         JLabel preview = new JLabel("No photo selected");
         preview.setHorizontalAlignment(SwingConstants.CENTER);
-        JPanel actions = new JPanel();
+        preview.setForeground(SpotterLanStyle.MUTED);
+        preview.setOpaque(true);
+        preview.setBackground(SpotterLanStyle.SURFACE);
+        preview.setBorder(BorderFactory.createEmptyBorder(14, 12, 14, 12));
+        JPanel actions = actions();
         JButton choose = new JButton("Choose photo");
         JButton save = new JButton("Save profile");
         JButton cancel = new JButton("Log out");
+        SpotterLanStyle.button(choose, false);
+        SpotterLanStyle.button(save, true);
+        SpotterLanStyle.button(cancel, false);
+        actions.add(cancel);
         actions.add(choose);
         actions.add(save);
-        actions.add(cancel);
 
-        JPanel content = new JPanel(new BorderLayout(0, 10));
+        JPanel content = new JPanel(new BorderLayout(0, 12));
+        content.setOpaque(false);
         content.add(form, BorderLayout.NORTH);
         content.add(preview, BorderLayout.CENTER);
         choose.addActionListener(event -> choosePhoto(preview, choose, save, cancel));
         save.addActionListener(event -> saveProfile(client, displayName.getText(), age.getText(),
             interest.getText(), bio.getText(), choose, save, cancel));
-        cancel.addActionListener(event -> work("Logging out…", () -> {
+        cancel.addActionListener(event -> work("Logging out…", "Couldn’t reach the server",
+            "Check your connection, then try logging out again.", () -> {
             client.logout();
             return null;
         }, ignored -> backToLogin(), choose, save, cancel));
-        show(content, actions, save);
+        show("Build your profile", content, actions, save);
     }
 
     private void choosePhoto(JLabel preview, JButton... buttons)
@@ -156,7 +185,8 @@ final class SpotterLanOnboarding
         if (chooser.showOpenDialog(window) == JFileChooser.APPROVE_OPTION)
         {
             Path path = chooser.getSelectedFile().toPath();
-            work("Loading photo…", () -> readPhoto(path), photo -> {
+            work("Loading photo…", "Couldn’t open that photo", PHOTO_GUIDANCE,
+                () -> readPhoto(path), photo -> {
                 this.photo = photo;
                 preview.setText("");
                 preview.setIcon(photo.preview());
@@ -177,21 +207,24 @@ final class SpotterLanOnboarding
         }
         catch (NumberFormatException error)
         {
-            status.setText("Enter your age as a whole number.");
+            showError("Check your age", "Enter your age as a whole number.",
+                "You must be 18 or older to create a profile.");
             return;
         }
         if (age < SpotterAccounts.MIN_AGE)
         {
-            status.setText("You must be at least 18 to create a profile.");
+            showError("Check your age", "You must be 18 or older to create a profile.",
+                "Check that you entered your correct age.");
             return;
         }
         if (photo == null || name.isBlank() || interest.isBlank())
         {
-            status.setText("Enter a display name and workout interest, and choose a photo.");
+            showError("Finish your profile", "Some required details are missing.", PROFILE_GUIDANCE);
             return;
         }
         byte[] uploaded = photo.bytes();
-        work("Saving profile…", () -> client.completeProfile(name.trim(), age, interest.trim(),
+        work("Saving profile…", "Couldn’t save your profile", PROFILE_GUIDANCE + " " + PHOTO_GUIDANCE,
+            () -> client.completeProfile(name.trim(), age, interest.trim(),
             bio.trim(), uploaded), account -> {
                 if (account.profileComplete())
                 {
@@ -199,7 +232,7 @@ final class SpotterLanOnboarding
                 }
                 else
                 {
-                    status.setText("Profile setup is incomplete.");
+                    showError("Finish your profile", "Profile setup is incomplete.", PROFILE_GUIDANCE);
                 }
             }, buttons);
     }
@@ -217,7 +250,14 @@ final class SpotterLanOnboarding
         onComplete.accept(serverAddress, client);
     }
 
-    private <T> void work(String progress, Callable<T> task, Consumer<T> onSuccess,
+    private void showError(String title, String detail, String guidance)
+    {
+        status.setText(title);
+        SpotterLanStyle.alert(window, title, detail, guidance);
+    }
+
+    private <T> void work(String progress, String errorTitle, String guidance,
+        Callable<T> task, Consumer<T> onSuccess,
         JButton... buttons)
     {
         for (JButton button : buttons)
@@ -254,27 +294,39 @@ final class SpotterLanOnboarding
                     if (cause instanceof SpotterLanClient.SessionExpiredException)
                     {
                         backToLogin();
+                        showError("Session expired", "Your session has ended.",
+                            "Log in again to continue setting up your profile.");
                     }
                     else
                     {
-                        status.setText(cause.getMessage());
+                        showError(errorTitle, cause.getMessage(), guidance);
                     }
                 }
                 catch (InterruptedException error)
                 {
                     Thread.currentThread().interrupt();
-                    status.setText("Request interrupted.");
+                    showError(errorTitle, "The request was interrupted.", guidance);
                 }
             }
         }.execute();
     }
 
-    private void show(JComponent fields, JComponent actions, JButton submit)
+    private void show(String title, JComponent fields, JComponent actions, JButton submit)
     {
-        JPanel body = new JPanel(new BorderLayout(0, 12));
-        body.setBorder(BorderFactory.createEmptyBorder(16, 20, 16, 20));
+        JPanel body = new JPanel(new BorderLayout(0, 18));
+        body.setBackground(SpotterLanStyle.BACKGROUND);
+        body.setBorder(BorderFactory.createEmptyBorder(22, 26, 22, 26));
+        JPanel header = new JPanel(new GridLayout(0, 1, 0, 4));
+        header.setOpaque(false);
+        JLabel brand = new JLabel("SPOTTER");
+        brand.setForeground(SpotterLanStyle.ACCENT);
+        brand.setFont(brand.getFont().deriveFont(java.awt.Font.BOLD, 13f));
+        header.add(brand);
+        header.add(SpotterLanStyle.heading(title));
+        body.add(header, BorderLayout.NORTH);
         body.add(fields, BorderLayout.CENTER);
-        JPanel footer = new JPanel(new BorderLayout());
+        JPanel footer = new JPanel(new BorderLayout(0, 8));
+        footer.setOpaque(false);
         footer.add(actions, BorderLayout.NORTH);
         footer.add(status, BorderLayout.SOUTH);
         body.add(footer, BorderLayout.SOUTH);
@@ -285,15 +337,29 @@ final class SpotterLanOnboarding
 
     private static JPanel form()
     {
-        return new JPanel(new GridLayout(0, 1, 0, 4));
+        JPanel form = new JPanel(new GridLayout(0, 1, 0, 5));
+        form.setOpaque(false);
+        return form;
     }
 
-    private static void addField(JPanel form, String name, JComponent field)
+    private static JPanel actions()
+    {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.TRAILING, 8, 0));
+        panel.setOpaque(false);
+        return panel;
+    }
+
+    private static void addField(JPanel form, String name, JTextField field)
     {
         JLabel label = new JLabel(name);
+        label.setForeground(SpotterLanStyle.INK);
         label.setLabelFor(field);
-        form.add(label);
-        form.add(field);
+        SpotterLanStyle.input(field);
+        JPanel row = new JPanel(new BorderLayout(0, 4));
+        row.setOpaque(false);
+        row.add(label, BorderLayout.NORTH);
+        row.add(field, BorderLayout.CENTER);
+        form.add(row);
     }
 
     static Photo readPhoto(Path path) throws IOException

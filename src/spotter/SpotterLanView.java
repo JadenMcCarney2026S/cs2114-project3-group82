@@ -14,6 +14,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import static spotter.SpotterLanStyle.*;
 
 /** Signed-in discovery and chat for the shared LAN app. */
 public final class SpotterLanView
@@ -123,8 +124,15 @@ public final class SpotterLanView
         this.server = server;
         this.client = client;
         JPanel chat = conversationPanel();
-        JPanel content = new JPanel(new BorderLayout(12, 12));
-        content.setBorder(BorderFactory.createEmptyBorder(16, 16, 16, 16));
+        JPanel content = new JPanel(new BorderLayout(16, 16));
+        content.setBackground(BACKGROUND);
+        content.setBorder(BorderFactory.createEmptyBorder(20, 24, 24, 24));
+        JPanel header = new JPanel(new BorderLayout());
+        header.setOpaque(false);
+        header.add(heading("SPOTTER"), BorderLayout.WEST);
+        button(logout, false);
+        header.add(logout, BorderLayout.EAST);
+        content.add(header, BorderLayout.NORTH);
         content.add(discoveryPanel(), BorderLayout.WEST);
         content.add(chat, BorderLayout.CENTER);
         window.setContentPane(content);
@@ -154,11 +162,18 @@ public final class SpotterLanView
     private JPanel conversationPanel()
     {
         JLabel matchLabel = new JLabel("Mutual match");
+        matchLabel.setForeground(INK);
+        matches.setToolTipText("Choose a mutual match to chat");
         matchLabel.setLabelFor(matches);
         JPanel matchPicker = new JPanel();
+        matchPicker.setOpaque(false);
         matchPicker.add(matchLabel);
         matchPicker.add(matches);
-        matchPicker.add(logout);
+        JLabel chatHeading = heading("Messages");
+        JPanel chatHeader = new JPanel(new BorderLayout(8, 0));
+        chatHeader.setOpaque(false);
+        chatHeader.add(chatHeading, BorderLayout.WEST);
+        chatHeader.add(matchPicker, BorderLayout.EAST);
         DefaultListCellRenderer renderer = new DefaultListCellRenderer();
         renderer.putClientProperty("html.disable", true);
         matches.setRenderer((list, id, index, selected, focus) ->
@@ -166,17 +181,26 @@ public final class SpotterLanView
         history.setEditable(false);
         history.setLineWrap(true);
         history.setWrapStyleWord(true);
+        input(history);
+        input(message);
+        button(send, true);
         history.getAccessibleContext().setAccessibleName("Conversation");
         message.getAccessibleContext().setAccessibleName("Message");
-        JPanel composer = new JPanel(new BorderLayout());
+        JPanel composer = new JPanel(new BorderLayout(8, 8));
+        composer.setOpaque(false);
         composer.add(message, BorderLayout.CENTER);
         composer.add(send, BorderLayout.EAST);
         composer.add(status, BorderLayout.SOUTH);
         status.putClientProperty("html.disable", true);
+        status.setForeground(MUTED);
 
-        JPanel chat = new JPanel(new BorderLayout(0, 8));
-        chat.add(matchPicker, BorderLayout.NORTH);
-        chat.add(new JScrollPane(history), BorderLayout.CENTER);
+        JPanel chat = new JPanel(new BorderLayout(0, 12));
+        chat.setBackground(SURFACE);
+        chat.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
+        chat.add(chatHeader, BorderLayout.NORTH);
+        JScrollPane transcript = new JScrollPane(history);
+        transcript.setBorder(BorderFactory.createEmptyBorder());
+        chat.add(transcript, BorderLayout.CENTER);
         chat.add(composer, BorderLayout.SOUTH);
         return chat;
     }
@@ -184,21 +208,35 @@ public final class SpotterLanView
     private JPanel discoveryPanel()
     {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.setBackground(SURFACE);
+        panel.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
         JPanel title = new JPanel(new GridLayout(0, 1));
-        title.add(new JLabel("Discover"));
+        title.setOpaque(false);
+        title.add(heading("Discover"));
+        candidate.setForeground(INK);
         candidate.putClientProperty("html.disable", true);
         title.add(candidate);
         candidatePhoto.setPreferredSize(new java.awt.Dimension(240, 240));
+        candidatePhoto.setBackground(BACKGROUND);
+        candidatePhoto.setForeground(MUTED);
+        candidatePhoto.setOpaque(true);
         candidatePhoto.getAccessibleContext().setAccessibleName("Candidate profile photo");
         candidateDetails.setEditable(false);
         candidateDetails.setLineWrap(true);
         candidateDetails.setWrapStyleWord(true);
+        input(candidateDetails);
         candidateDetails.getAccessibleContext().setAccessibleName("Candidate profile details");
-        JPanel buttons = new JPanel();
+        JPanel buttons = new JPanel(new GridLayout(1, 2, 8, 0));
+        buttons.setOpaque(false);
+        button(pass, false);
+        button(like, true);
         buttons.add(pass);
         buttons.add(like);
-        JPanel footer = new JPanel(new BorderLayout());
-        footer.add(new JScrollPane(candidateDetails), BorderLayout.CENTER);
+        JPanel footer = new JPanel(new BorderLayout(0, 8));
+        footer.setOpaque(false);
+        JScrollPane details = new JScrollPane(candidateDetails);
+        details.setBorder(BorderFactory.createEmptyBorder());
+        footer.add(details, BorderLayout.CENTER);
         footer.add(buttons, BorderLayout.SOUTH);
         panel.add(title, BorderLayout.NORTH);
         panel.add(candidatePhoto, BorderLayout.CENTER);
@@ -258,7 +296,8 @@ public final class SpotterLanView
         String text = sending ? message.getText() : "";
         if (sending && (peer == 0 || text.isBlank() || text.length() > 500))
         {
-            status.setText("Select a match and enter 1–500 characters.");
+            alert(window, "Check your message", "Your message couldn’t be sent.",
+                "Select a mutual match and enter a message between 1 and 500 characters.");
             return;
         }
         Action action = new Action(name, peer, text, sending ? drafts.idForSend(peer, text) : "");
@@ -305,17 +344,35 @@ public final class SpotterLanView
                 {
                     if (error.getCause() instanceof SpotterLanClient.SessionExpiredException)
                     {
+                        alert(window, "Session expired", "Your session has ended.",
+                            "Log in again to continue.");
                         returnToLogin("Your session expired. Log in again.");
                         return;
                     }
-                    status.setText(action.isSend()
-                        ? "Delivery to " + name(action.peer()) + " unconfirmed. Retry the same draft."
-                        : "Connection error. " + error.getCause().getMessage());
+                    if (action.isPoll())
+                    {
+                        status.setText("Connection error. Check that the server is running.");
+                    }
+                    else if (action.isSend())
+                    {
+                        alert(window, "Delivery unconfirmed", "Spotter could not confirm delivery.",
+                            "Check your connection and retry the same draft.");
+                    }
+                    else
+                    {
+                        alert(window, "Connection error", "Spotter couldn’t complete that action.",
+                            "Check that the server is running, then try again.");
+                    }
                 }
                 catch (InterruptedException error)
                 {
                     Thread.currentThread().interrupt();
                     status.setText("Request interrupted.");
+                    if (!action.isPoll())
+                    {
+                        alert(window, "Request interrupted", "The action was interrupted.",
+                            "Check your connection and try again.");
+                    }
                 }
                 active = null;
                 Action next = queued;
@@ -406,7 +463,12 @@ public final class SpotterLanView
     {
         if (!accepted)
         {
-            status.setText("Action rejected. Check the current match or profile.");
+            if (!action.isPoll())
+            {
+                alert(window, "Action couldn’t be completed", "The server rejected that action.",
+                    action.isSend() ? "Choose a current mutual match and check your message."
+                        : "Wait for the profile to refresh before choosing Like or Pass.");
+            }
         }
         else if (!action.isPoll())
         {
@@ -512,6 +574,8 @@ public final class SpotterLanView
                 catch (ExecutionException error)
                 {
                     notice = "Signed out on this computer. Server logout was unconfirmed.";
+                    alert(window, "Server logout unconfirmed", notice,
+                        "Check your connection before logging back in.");
                 }
                 catch (InterruptedException error)
                 {
