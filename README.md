@@ -444,6 +444,10 @@ The second command produces no paths. Across the wider project history,
 `ChatManager` changed for earlier live-chat and LAN history support. The
 shared workout reuses the existing match check without changing it.
 
+We plan on implementing an algorithm that matches people based on their 
+compatibility score and exclude those that are far off from each other. This is
+what we will do to make the implementation of the app cheaper. 
+
 ### What remains
 
 Workouts are in memory, can be appended and read, and are available in the
