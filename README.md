@@ -154,6 +154,56 @@ without a photo use their initial.
 SpotterApp.createSessions is shared by console and desktop launchers; each new
 launch starts fresh in-memory state. The original console remains available.
 
+### Chat from multiple computers on the same Wi-Fi
+
+Compile the Java 17 production sources using the console instructions above
+on each computer. On the host, find its Wi-Fi IPv4 address. Generate a TLS
+certificate for that address using JDK 17's `keytool`. Replace the example IP
+and keep the private keystore outside the repository:
+
+```sh
+keytool -genkeypair -alias spotter-lan -keyalg RSA -keysize 2048 \
+  -dname "CN=Spotter LAN" -ext "SAN=ip:192.168.1.10" -validity 90 \
+  -storetype PKCS12 -keystore "$HOME/spotter-lan-host.p12"
+keytool -exportcert -rfc -alias spotter-lan -keystore "$HOME/spotter-lan-host.p12" \
+  -file "$HOME/spotter-lan-host.crt"
+keytool -printcert -file "$HOME/spotter-lan-host.crt"
+java -cp "$CONSOLE_OUT" spotter.SpotterLanServer 192.168.1.10 8080 \
+  "$HOME/spotter-lan-host.p12"
+```
+
+The server prompts for the host keystore password. For Eclipse launches that
+have no terminal prompt, set `SPOTTER_KEYSTORE_PASSWORD` in the local launch
+environment. Keep the server running and share only the public certificate
+(`.crt`) and each participant's own demo code.
+
+On every client computer, confirm that `keytool -printcert` reports the SHA-256
+fingerprint the host provided through a trusted channel before importing the
+certificate. Use a separate password for this client truststore, which holds
+only the public certificate. Replace `CLIENT_STORE_PASSWORD` with that password:
+
+```sh
+keytool -printcert -file "$HOME/spotter-lan-host.crt"
+keytool -importcert -alias spotter-lan -file "$HOME/spotter-lan-host.crt" \
+  -storetype PKCS12 -keystore "$HOME/spotter-lan-trust.p12"
+java -Djavax.net.ssl.trustStore="$HOME/spotter-lan-trust.p12" \
+  -Djavax.net.ssl.trustStoreType=PKCS12 \
+  -Djavax.net.ssl.trustStorePassword='CLIENT_STORE_PASSWORD' \
+  -cp "$CONSOLE_OUT" spotter.SpotterLanView
+```
+
+Enter the HTTPS URL printed by the server and the code for one demo account.
+Give each participant a different account code. The server starts with four
+demo accounts. Like each other's profiles, select the other person under
+**Mutual match**, and send a message. The conversation refreshes about once a
+second and retains the 100 most recent messages per pair. If a send is
+unconfirmed, retry the same draft. The server recognizes duplicate requests
+for the last 256 successful sends per account. If the host's IP
+changes, generate and import a certificate for the new IP. If clients cannot
+connect, check that Wi-Fi allows connections between devices and that the host
+firewall allows inbound TCP on the chosen port. Closing the server clears
+matches and messages and invalidates the session codes.
+
 ### Create a demo profile
 
 In the desktop window, click **Create profile**. Enter a name, positive integer
