@@ -48,4 +48,19 @@ public class WorkoutManagerTest
         assertEquals(second, manager.getWorkout(1));
         assertEquals("Leg Day", manager.getWorkout(1).getWorkoutName());
     }
+    
+    @Test
+    public void testMultipleUsers()
+    {
+        WorkoutManager manager = new WorkoutManager();
+
+        Workout first = new Workout("Push Day");
+        Workout second = new Workout("Leg Day");
+
+        manager.addWorkout(1, first);
+        manager.addWorkout(2, second);
+
+        assertSame(first, manager.getWorkout(1));
+        assertSame(second, manager.getWorkout(2));
+    }
 }

@@ -97,6 +97,61 @@ public class SpotterController
         view.showChat(conversation);
         return conversation;
     }
+    
+
+    public boolean createWorkout(String workoutName)
+    {
+        boolean created = model.createWorkout(workoutName);
+    
+        if (created)
+        {
+            view.showInfo("Workout created: " + workoutName);
+        }
+        else
+        {
+            view.showError("Invalid workout name.");
+        }
+    
+        return created;
+    }
+    
+    public boolean addWorkoutExercise(String exercise)
+    {
+        boolean added = model.addExercise(exercise);
+    
+        if (added)
+        {
+            view.showInfo("Exercise added: " + exercise);
+        }
+        else
+        {
+            view.showError("Cannot add exercise.");
+        }
+    
+        return added;
+    }
+    
+    public Workout displayWorkout()
+    {
+        Workout workout = model.getWorkout();
+    
+        if (workout == null)
+        {
+            view.showInfo("No workout created.");
+        }
+        else
+        {
+            view.showInfo("Workout: " + workout.getWorkoutName());
+    
+            for (String exercise : workout.getExercises())
+            {
+                view.showInfo("- " + exercise);
+            }
+        }
+    
+        return workout;
+    }
+
 
     public void run(Scanner input)
     {
@@ -181,14 +236,43 @@ public class SpotterController
                         view.showInfo("Active user: " + id);
                         displayNextProfile();
                     }
-                    else
-                    {
-                        view.showError("Unknown user ID.");
-                    }
-                    break;
-                default:
-                    view.showError("Unknown command. Type help.");
-                    break;
+    else
+    {
+        view.showError("Unknown user ID.");
+    }
+    break;
+    
+    case "workout":
+        if (parts.length != 1)
+        {
+            view.showError("Usage: workout");
+            break;
+        }
+        displayWorkout();
+        break;
+    
+    case "createworkout":
+        if (parts.length < 2)
+        {
+            view.showError("Usage: createworkout <name>");
+            break;
+        }
+        createWorkout(line.trim().substring(parts[0].length()).trim());
+        break;
+    
+    case "addexercise":
+        if (parts.length < 2)
+        {
+            view.showError("Usage: addexercise <exercise>");
+            break;
+        }
+        addWorkoutExercise(line.trim().substring(parts[0].length()).trim());
+        break;
+    
+    default:
+        view.showError("Unknown command. Type help.");
+        break;
+
             }
         }
         catch (NumberFormatException exception)

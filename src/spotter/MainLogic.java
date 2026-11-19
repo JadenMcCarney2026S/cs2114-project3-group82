@@ -19,18 +19,30 @@ public class MainLogic
         this(currentUser, new ChatManager(new MatchManager()));
     }
 
-    /** Pass the same ChatManager to user sessions to share matches and messages. */
+
     public MainLogic(UserProfile currentUser, ChatManager chatManager)
     {
-        if (chatManager == null)
+        this(currentUser, chatManager, new WorkoutManager());
+    }
+    
+    public MainLogic(UserProfile currentUser, ChatManager chatManager,
+        WorkoutManager workoutManager)
+    {
+        if (currentUser == null)
         {
-            throw new IllegalArgumentException("Chat manager cannot be null");
+            throw new IllegalArgumentException("Current user cannot be null");
         }
+        
+        if (chatManager == null || workoutManager == null)
+        {
+            throw new IllegalArgumentException("Managers cannot be null");
+        }
+    
         profileManager = new ProfileManager(currentUser);
         this.currentUser = currentUser;
         this.chatManager = chatManager;
         matchManager = chatManager.getMatchManager();
-        workoutManager = new WorkoutManager();
+        this.workoutManager = workoutManager;
     }
 
     UserProfile getCurrentUser()

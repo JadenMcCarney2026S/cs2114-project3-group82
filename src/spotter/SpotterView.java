@@ -120,6 +120,9 @@ public class SpotterView
         showInfo("send <id> <text>  Message a match");
         showInfo("chat <id>         Read your conversation");
         showInfo("user <id>         Switch demo user (not login)");
+        showInfo("createworkout <name>  Create a new workout");
+        showInfo("addexercise <name>   Add an exercise to your workout");
+        showInfo("workout              View your current workout");
         showInfo("help / quit       Show this menu / exit");
         showInfo("=======================================");
     }
