@@ -6,7 +6,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /** Optional desktop presentation; business rules stay in the existing model. */
-public class SpotterSwingView extends SpotterView
+public class SpotterSwingView
+    extends SpotterView
 {
     private static final Color INK = new Color(225, 239, 230);
     private static final Color ACCENT = new Color(77, 230, 142);
@@ -20,19 +21,21 @@ public class SpotterSwingView extends SpotterView
     private final JLabel status = new JLabel("Like someone to get started.");
     private final JButton pass = button("Pass", "pass");
     private final JButton like = button("Like", "like");
-    private final DefaultListModel<UserProfile> matchItems = new DefaultListModel<>();
+    private final DefaultListModel<UserProfile> matchItems =
+        new DefaultListModel<>();
     private final JList<UserProfile> matches = new JList<>(matchItems);
     private final JTextArea conversation = new JTextArea();
     private final JTextField message = new JTextField();
     private final JButton send = button("Send", "send");
-    private final JComboBox<String> users = new JComboBox<>(new String[] {
-        "Alice / 1", "Bob / 2", "Carol / 3", "Dave / 4" });
+    private final JComboBox<String> users = new JComboBox<>(
+        new String[] { "Alice / 1", "Bob / 2", "Carol / 3", "Dave / 4" });
     private final SpotterController controller;
 
     public SpotterSwingView()
     {
         super(System.out);
-        controller = new SpotterController(SpotterApp.createSessions(), 1, this);
+        controller =
+            new SpotterController(SpotterApp.createSessions(), 1, this);
         panel.setBackground(BACKGROUND);
         panel.setBorder(new EmptyBorder(24, 28, 20, 28));
         panel.setPreferredSize(new Dimension(960, 820));
@@ -63,7 +66,8 @@ public class SpotterSwingView extends SpotterView
         JPanel card = new JPanel(new BorderLayout(12, 12));
         card.setBackground(SURFACE);
         card.setBorder(new EmptyBorder(24, 24, 24, 24));
-        JLabel intro = new JLabel("FIND YOUR NEXT GYM PARTNER", SwingConstants.CENTER);
+        JLabel intro =
+            new JLabel("FIND YOUR NEXT GYM PARTNER", SwingConstants.CENTER);
         intro.setForeground(MUTED);
         card.add(intro, BorderLayout.NORTH);
         JPanel identity = new JPanel(new BorderLayout(0, 12));
@@ -110,16 +114,24 @@ public class SpotterSwingView extends SpotterView
         matches.setSelectionBackground(new Color(30, 75, 46));
         matches.setSelectionForeground(ACCENT);
         matches.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        matches.setCellRenderer(new DefaultListCellRenderer()
-        {
+        matches.setCellRenderer(new DefaultListCellRenderer() {
             @Override
-            public Component getListCellRendererComponent(JList<?> list,
-                Object value, int index, boolean selected, boolean focus)
+            public Component getListCellRendererComponent(
+                JList<?> list,
+                Object value,
+                int index,
+                boolean selected,
+                boolean focus)
             {
                 JLabel label = (JLabel)super.getListCellRendererComponent(
-                    list, value, index, selected, focus);
+                    list,
+                    value,
+                    index,
+                    selected,
+                    focus);
                 UserProfile profile = (UserProfile)value;
-                label.setText(profile.getName() + "  /  " + profile.getUserId());
+                label
+                    .setText(profile.getName() + "  /  " + profile.getUserId());
                 label.setBorder(new EmptyBorder(9, 10, 9, 10));
                 return label;
             }
@@ -132,8 +144,10 @@ public class SpotterSwingView extends SpotterView
         conversation.setWrapStyleWord(true);
         conversation.setFont(new Font("SansSerif", Font.PLAIN, 15));
         conversation.setMargin(new Insets(12, 12, 12, 12));
-        JSplitPane chats = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-            new JScrollPane(matches), new JScrollPane(conversation));
+        JSplitPane chats = new JSplitPane(
+            JSplitPane.VERTICAL_SPLIT,
+            new JScrollPane(matches),
+            new JScrollPane(conversation));
         chats.setDividerLocation(140);
         chats.setResizeWeight(0.35);
         chats.setBorder(BorderFactory.createLineBorder(SURFACE));
@@ -147,9 +161,10 @@ public class SpotterSwingView extends SpotterView
         message.setForeground(INK);
         message.setCaretColor(ACCENT);
         message.setDisabledTextColor(MUTED);
-        message.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(49, 75, 59)),
-            new EmptyBorder(8, 10, 8, 10)));
+        message.setBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(49, 75, 59)),
+                new EmptyBorder(8, 10, 8, 10)));
         compose.add(message, BorderLayout.CENTER);
         compose.add(send, BorderLayout.EAST);
         inbox.add(compose, BorderLayout.SOUTH);
@@ -170,7 +185,9 @@ public class SpotterSwingView extends SpotterView
             conversation.setText("");
             message.setText("");
             String selectedUser = (String)users.getSelectedItem();
-            controller.handleCommand("user " + selectedUser.substring(selectedUser.lastIndexOf(" / ") + 3));
+            controller.handleCommand(
+                "user " + selectedUser
+                    .substring(selectedUser.lastIndexOf(" / ") + 3));
             controller.displayMatches();
             updateComposer();
         });
@@ -190,28 +207,32 @@ public class SpotterSwingView extends SpotterView
         controller.displayNextProfile();
         controller.displayMatches();
         updateComposer();
-        showInfo("Alice likes Bob? Switch to Bob and like Alice to create a real match.");
+        showInfo(
+            "Alice likes Bob? Switch to Bob and like Alice to create a real match.");
     }
+
 
     private void showCreateProfile()
     {
         JTextField[] fields = new JTextField[6];
         String[] labels = { "Name", "Age", "Goal (optional)", "Gym (optional)",
             "Preferred time (optional)", "About me (optional)" };
-        JComboBox<String> gym = new JComboBox<>(new String[] {
-            "", "War Memorial Hall", "McComas Hall", "Venture Out Center",
-            "Rec Sports Field House", "Washington Street Courts",
-            "Prairie Quad Fitness Park", "VT Intramural Fields",
-            "Sand Volleyball Courts", "VT Golf Course", "Disc Golf Course",
-            "Drillfield", "Roller Hockey Rink", "Venture Out Challenge Course",
-            "Blacksburg Health & Fitness at The Weight Club", "Anytime Fitness",
-            "Zeffer Fitness", "460 Fitness", "Blacksburg Boxing and Fitness",
-            "In Balance Yoga", "Blacksburg Community Center",
-            "Crimper's Climbing Gym", "Blacksburg Aquatic Center",
-            "Christiansburg Aquatic Center" });
+        JComboBox<String> gym = new JComboBox<>(
+            new String[] { "", "War Memorial Hall", "McComas Hall",
+                "Venture Out Center", "Rec Sports Field House",
+                "Washington Street Courts", "Prairie Quad Fitness Park",
+                "VT Intramural Fields", "Sand Volleyball Courts",
+                "VT Golf Course", "Disc Golf Course", "Drillfield",
+                "Roller Hockey Rink", "Venture Out Challenge Course",
+                "Blacksburg Health & Fitness at The Weight Club",
+                "Anytime Fitness", "Zeffer Fitness", "460 Fitness",
+                "Blacksburg Boxing and Fitness", "In Balance Yoga",
+                "Blacksburg Community Center", "Crimper's Climbing Gym",
+                "Blacksburg Aquatic Center", "Christiansburg Aquatic Center" });
         gym.setEditable(true);
         gym.setPreferredSize(new Dimension(260, 28));
-        gym.setToolTipText("Facilities from the supplied VT/Blacksburg list; or type your own.");
+        gym.setToolTipText(
+            "Facilities from the supplied VT/Blacksburg list; or type your own.");
         JPanel form = new JPanel(new GridLayout(0, 2, 8, 8));
         for (int i = 0; i < 6; i++)
         {
@@ -219,29 +240,39 @@ public class SpotterSwingView extends SpotterView
             form.add(new JLabel(labels[i]));
             form.add(i == 3 ? gym : fields[i]);
         }
-        JComboBox<String> activity = new JComboBox<>(new String[] {
-            "Running", "Swimming", "Strength training", "Cycling", "Basketball",
-            "Volleyball", "Badminton", "Pickleball", "Tennis", "Table tennis",
-            "Racquetball", "Squash", "Boxing", "Yoga", "Pilates", "Dance",
-            "CrossFit", "Bouldering", "Climbing", "Soccer", "Flag football",
-            "Ultimate frisbee", "Golf", "Disc golf", "Roller hockey",
-            "Calisthenics" });
-        JComboBox<String> level = new JComboBox<>(new String[] {
-            "Beginner", "Intermediate", "Advanced" });
+        JComboBox<String> activity = new JComboBox<>(
+            new String[] { "Running", "Swimming", "Strength training",
+                "Cycling", "Basketball", "Volleyball", "Badminton",
+                "Pickleball", "Tennis", "Table tennis", "Racquetball", "Squash",
+                "Boxing", "Yoga", "Pilates", "Dance", "CrossFit", "Bouldering",
+                "Climbing", "Soccer", "Flag football", "Ultimate frisbee",
+                "Golf", "Disc golf", "Roller hockey", "Calisthenics" });
+        JComboBox<String> level = new JComboBox<>(
+            new String[] { "Beginner", "Intermediate", "Advanced" });
         form.add(new JLabel("Workout interest"));
         form.add(activity);
         form.add(new JLabel("Experience"));
         form.add(level);
-        while (JOptionPane.showConfirmDialog(panel, form, "Create demo profile",
-            JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION)
+        while (JOptionPane.showConfirmDialog(
+            panel,
+            form,
+            "Create demo profile",
+            JOptionPane.OK_CANCEL_OPTION,
+            JOptionPane.PLAIN_MESSAGE) == JOptionPane.OK_OPTION)
         {
             try
             {
-                UserProfile user = new UserProfile(users.getItemCount() + 1,
-                    fields[0].getText(), Integer.parseInt(fields[1].getText().trim()),
-                    java.util.Map.of((String)activity.getSelectedItem(),
-                        (String)level.getSelectedItem()), fields[2].getText(),
-                    gym.getEditor().getItem().toString(), fields[4].getText(), fields[5].getText());
+                UserProfile user = new UserProfile(
+                    users.getItemCount() + 1,
+                    fields[0].getText(),
+                    Integer.parseInt(fields[1].getText().trim()),
+                    java.util.Map.of(
+                        (String)activity.getSelectedItem(),
+                        (String)level.getSelectedItem()),
+                    fields[2].getText(),
+                    gym.getEditor().getItem().toString(),
+                    fields[4].getText(),
+                    fields[5].getText());
                 if (createDemoProfile(user))
                 {
                     return;
@@ -249,12 +280,15 @@ public class SpotterSwingView extends SpotterView
             }
             catch (IllegalArgumentException exception)
             {
-                JOptionPane.showMessageDialog(panel,
+                JOptionPane.showMessageDialog(
+                    panel,
                     "Enter a name and a positive whole-number age.",
-                    "Check profile", JOptionPane.ERROR_MESSAGE);
+                    "Check profile",
+                    JOptionPane.ERROR_MESSAGE);
             }
         }
     }
+
 
     public boolean createDemoProfile(UserProfile user)
     {
@@ -271,6 +305,7 @@ public class SpotterSwingView extends SpotterView
         return true;
     }
 
+
     private static JButton button(String text, String componentName)
     {
         JButton result = new JButton(text);
@@ -278,14 +313,16 @@ public class SpotterSwingView extends SpotterView
         result.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         result.setOpaque(true);
         result.setBackground(componentName.equals("pass") ? SURFACE : ACCENT);
-        result.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(49, 75, 59)),
-            new EmptyBorder(8, 12, 8, 12)));
+        result.setBorder(
+            BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(49, 75, 59)),
+                new EmptyBorder(8, 12, 8, 12)));
         result.setFont(new Font("SansSerif", Font.BOLD, 16));
         result.setForeground(componentName.equals("pass") ? INK : BACKGROUND);
         result.setPreferredSize(new Dimension(100, 48));
         return result;
     }
+
 
     private void swipe(SwipeAction action)
     {
@@ -293,24 +330,28 @@ public class SpotterSwingView extends SpotterView
         controller.displayMatches();
     }
 
+
     private void updateComposer()
     {
         boolean selected = matches.getSelectedValue() != null;
         message.setEnabled(selected);
         send.setEnabled(selected);
-        message.setToolTipText(selected ? "Write a message" : "Select a mutual match first");
+        message.setToolTipText(
+            selected ? "Write a message" : "Select a mutual match first");
     }
+
 
     private void sendMessage()
     {
         UserProfile selected = matches.getSelectedValue();
-        if (selected != null && controller.sendChatMessage(
-            selected.getUserId(), message.getText()))
+        if (selected != null && controller
+            .sendChatMessage(selected.getUserId(), message.getText()))
         {
             message.setText("");
             controller.displayConversation(selected.getUserId());
         }
     }
+
 
     @Override
     public void showProfile(UserProfile profile)
@@ -321,28 +362,53 @@ public class SpotterSwingView extends SpotterView
         avatar.setIcon(null);
         if (available)
         {
-            String file = java.util.Map.of(1, "demo-1.jpg", 2, "demo-2.jpg",
-                3, "demo-7.jpg", 4, "demo-3.jpg").get(profile.getUserId());
-            java.net.URL resource = file == null ? null : getClass().getResource("photos/" + file);
+            String file = java.util.Map.of(
+                1,
+                "demo-1.jpg",
+                2,
+                "demo-2.jpg",
+                3,
+                "demo-7.jpg",
+                4,
+                "demo-3.jpg").get(profile.getUserId());
+            java.net.URL resource =
+                file == null ? null : getClass().getResource("photos/" + file);
             if (resource != null)
             {
                 ImageIcon original = new ImageIcon(resource);
                 if (original.getIconWidth() > 0 && original.getIconHeight() > 0)
                 {
                     int height = 290;
-                    int width = original.getIconWidth() * height / original.getIconHeight();
-                    avatar.setIcon(new ImageIcon(original.getImage().getScaledInstance(
-                        Math.max(1, width), height, Image.SCALE_SMOOTH)));
+                    int width = original.getIconWidth() * height
+                        / original.getIconHeight();
+                    avatar.setIcon(
+                        new ImageIcon(
+                            original.getImage().getScaledInstance(
+                                Math.max(1, width),
+                                height,
+                                Image.SCALE_SMOOTH)));
                 }
             }
         }
-        avatar.setText(avatar.getIcon() != null ? "" : available ? profile.getName().substring(0, 1).toUpperCase() : "-");
-        name.setText(available ? profile.getName() + ", " + profile.getAge() : "All caught up");
-        details.setText(available ? "Interests: " + profile.getWorkoutExperience()
-            + "\nGoal: " + profile.getGoal() + "\nGym: " + profile.getGym()
-            + "\nTime: " + profile.getPreferredTime() + "\nAbout: " + profile.getBio()
-            : "No eligible profiles left. Try another demo account.");
+        avatar.setText(
+            avatar.getIcon() != null
+                ? ""
+                : available
+                    ? profile.getName().substring(0, 1).toUpperCase()
+                    : "-");
+        name.setText(
+            available
+                ? profile.getName() + ", " + profile.getAge()
+                : "All caught up");
+        details.setText(
+            available
+                ? "Interests: " + profile.getWorkoutExperience() + "\nGoal: "
+                    + profile.getGoal() + "\nGym: " + profile.getGym()
+                    + "\nTime: " + profile.getPreferredTime() + "\nAbout: "
+                    + profile.getBio()
+                : "No eligible profiles left. Try another demo account.");
     }
+
 
     @Override
     public void showMatches(List<UserProfile> profiles)
@@ -352,17 +418,23 @@ public class SpotterSwingView extends SpotterView
         {
             matchItems.addElement(profile);
         }
-        conversation.setText(profiles.isEmpty()
-            ? "No matches yet. A match needs two likes." : "Select a match to chat.");
+        conversation.setText(
+            profiles.isEmpty()
+                ? "No matches yet. A match needs two likes."
+                : "Select a match to chat.");
         updateComposer();
     }
+
 
     @Override
     public void showChat(List<String> messages)
     {
-        conversation.setText(messages.isEmpty() ? "Say hello to your gym partner."
-            : String.join("\n\n", messages));
+        conversation.setText(
+            messages.isEmpty()
+                ? "Say hello to your gym partner."
+                : String.join("\n\n", messages));
     }
+
 
     @Override
     public void showInfo(String text)
@@ -371,6 +443,7 @@ public class SpotterSwingView extends SpotterView
         status.setText(text);
     }
 
+
     @Override
     public void showError(String text)
     {
@@ -378,10 +451,12 @@ public class SpotterSwingView extends SpotterView
         status.setText(text);
     }
 
+
     public JPanel getPanel()
     {
         return panel;
     }
+
 
     public static void main(String[] args)
     {
@@ -396,4 +471,26 @@ public class SpotterSwingView extends SpotterView
             window.setVisible(true);
         });
     }
+
+
+    @Override
+    public void showWorkout(List<String> exerciseLines)
+    {
+        showWorkout(null, exerciseLines);
+    }
+
+
+    @Override
+    public void showWorkout(String workoutName, List<String> exerciseLines)
+    {
+        JTextArea area =
+            new JTextArea(new WorkoutView().format(workoutName, exerciseLines));
+        area.setEditable(false);
+        JOptionPane.showMessageDialog(
+            panel,
+            area,
+            "Shared workout",
+            JOptionPane.PLAIN_MESSAGE);
+    }
+
 }

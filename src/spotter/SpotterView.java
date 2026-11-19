@@ -6,6 +6,7 @@ import java.util.List;
 /** Console formatting only; all actions go through the controller. */
 public class SpotterView
 {
+    private final WorkoutView workoutView = new WorkoutView();
     private final PrintStream output;
     private final java.util.Scanner input;
 
@@ -142,4 +143,17 @@ public class SpotterView
     {
         output.println("Error: " + message);
     }
+    
+    public void showWorkout(List<String> exerciseLines)
+    {
+        output.println(workoutView.format(exerciseLines));
+    }
+
+
+    public void showWorkout(String workoutName, List<String> exerciseLines)
+    {
+        output.println(workoutView.format(workoutName, exerciseLines));
+    }
+
+
 }
