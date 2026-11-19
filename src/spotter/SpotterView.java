@@ -119,9 +119,29 @@ public class SpotterView
         showInfo("matches           View mutual matches");
         showInfo("send <id> <text>  Message a match");
         showInfo("chat <id>         Read your conversation");
+        showInfo("workout <id>      Read your shared workout");
+        showInfo("exercise <id> <sets> <reps> <weight> <name>  Add an exercise");
         showInfo("user <id>         Switch demo user (not login)");
         showInfo("help / quit       Show this menu / exit");
         showInfo("=======================================");
+    }
+
+    public void showWorkout(List<Workout.Exercise> exercises)
+    {
+        showInfo("\n--- SHARED WORKOUT ---");
+        showInfo(formatWorkout(exercises));
+    }
+
+    protected String formatWorkout(List<Workout.Exercise> exercises)
+    {
+        if (exercises.isEmpty())
+        {
+            return "No accessible exercises.";
+        }
+        return exercises.stream()
+            .map(exercise -> exercise.name() + " — " + exercise.sets() + " sets × "
+                + exercise.reps() + " reps, " + exercise.weight() + " lb")
+            .collect(java.util.stream.Collectors.joining("\n"));
     }
 
     public void showPrompt(int userId)

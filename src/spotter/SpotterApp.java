@@ -36,11 +36,13 @@ public class SpotterApp
                 "Improve technique", "Blacksburg Aquatic Center", "Afternoon", "Learning one lap at a time."),
             new UserProfile(4, "Dave", 23, Map.of("Running", "Beginner"),
                 "Stay consistent", "Blacksburg Health & Fitness at The Weight Club", "Weekend", "Always up for a relaxed run."));
-        ChatManager chat = new ChatManager(new MatchManager());
+        MatchManager matches = new MatchManager();
+        ChatManager chat = new ChatManager(matches);
+        WorkoutManager workouts = new WorkoutManager(matches);
         Map<Integer, MainLogic> sessions = new LinkedHashMap<>();
         for (UserProfile user : users)
         {
-            MainLogic model = new MainLogic(user, chat);
+            MainLogic model = new MainLogic(user, chat, workouts);
             for (UserProfile candidate : users)
             {
                 model.addProfile(candidate);
@@ -64,13 +66,17 @@ public class SpotterApp
             {"Switch to Bob's independent session", "user 2"},
             {"Bob likes Alice: a real mutual match is created", "right"},
             {"Inspect the mutual match", "matches"},
+            {"Bob adds a bodyweight exercise to the shared routine", "exercise 1 3 12 0 Push ups"},
+            {"Reject an exercise with zero sets", "exercise 1 0 12 0 Invalid"},
             {"Bob sends Alice a message", "send 1 Hello Alice"},
             {"Return to Alice's existing session", "user 1"},
             {"Alice can also see the match", "matches"},
+            {"Alice reads Bob's exercise", "workout 2"},
             {"Alice replies", "send 2 Hi Bob"},
             {"Read both messages", "chat 2"},
             {"Switch to Carol, who shares Running but has no mutual match", "user 3"},
             {"Carol cannot read Alice and Bob's messages", "chat 1"},
+            {"Carol cannot read Alice and Bob's routine", "workout 1"},
             {"Malformed IDs produce an error, not a crash", "user abc"}
         };
         view.showInfo("\nGUIDED DEMO - press Enter for each step; type quit to stop.");

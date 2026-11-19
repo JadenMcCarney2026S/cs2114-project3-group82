@@ -13,6 +13,7 @@ class MainLogicTest
     private UserProfile carol;
     private MatchManager matches;
     private ChatManager chat;
+    private WorkoutManager workouts;
     private MainLogic aliceLogic;
     private MainLogic bobLogic;
 
@@ -24,8 +25,9 @@ class MainLogicTest
         carol = profile(3, "Carol", "Running");
         matches = new MatchManager();
         chat = new ChatManager(matches);
-        aliceLogic = new MainLogic(alice, chat);
-        bobLogic = new MainLogic(bob, chat);
+        workouts = new WorkoutManager(matches);
+        aliceLogic = new MainLogic(alice, chat, workouts);
+        bobLogic = new MainLogic(bob, chat, workouts);
         assertTrue(aliceLogic.addProfile(bob));
         assertTrue(bobLogic.addProfile(alice));
     }
@@ -39,6 +41,33 @@ class MainLogicTest
     {
         assertNull(aliceLogic.swipeCurrentProfile(SwipeAction.RIGHT));
         assertSame(alice, bobLogic.swipeCurrentProfile(SwipeAction.RIGHT));
+    }
+
+    @Test
+    void workoutIsSharedInOrderOnlyByMatchedUsers()
+    {
+        assertFalse(aliceLogic.addWorkoutExercise(2, "Squat", 3, 10, 0));
+        assertTrue(aliceLogic.getWorkout(2).isEmpty());
+        matchAliceAndBob();
+        assertTrue(aliceLogic.addWorkoutExercise(2, " Squat ", 3, 10, 0));
+        assertTrue(bobLogic.addWorkoutExercise(1, "Deadlift", 2, 5, 45.5));
+        var expected = List.of(new Workout.Exercise("Squat", 3, 10, 0),
+            new Workout.Exercise("Deadlift", 2, 5, 45.5));
+        assertEquals(expected, aliceLogic.getWorkout(2));
+        assertEquals(expected, bobLogic.getWorkout(1));
+        assertThrows(UnsupportedOperationException.class, () -> bobLogic.getWorkout(1).clear());
+        MainLogic outsider = new MainLogic(carol, chat, workouts);
+        assertTrue(outsider.getWorkout(1).isEmpty());
+        assertFalse(outsider.addWorkoutExercise(1, "Row", 1, 10, 20));
+    }
+
+    @Test
+    void workoutUsesTheSameAuthorizationAsChat()
+    {
+        assertThrows(IllegalArgumentException.class, () -> new MainLogic(alice, chat, null));
+        assertThrows(IllegalArgumentException.class,
+            () -> new MainLogic(alice, chat, new WorkoutManager(new MatchManager())));
+        assertSame(workouts, aliceLogic.getWorkoutManager());
     }
 
     @Test

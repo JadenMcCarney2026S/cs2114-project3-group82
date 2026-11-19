@@ -44,7 +44,8 @@ public class SpotterController
         {
             return false;
         }
-        MainLogic newSession = new MainLogic(user, model.getChatManager());
+        MainLogic newSession = new MainLogic(user, model.getChatManager(),
+            model.getWorkoutManager());
         for (MainLogic session : sessions.values())
         {
             newSession.addProfile(session.getCurrentUser());
@@ -107,6 +108,42 @@ public class SpotterController
         List<String> conversation = model.getConversation(otherUserId);
         view.showChat(conversation);
         return conversation;
+    }
+
+    public void displayWorkout(int otherUserId)
+    {
+        view.showWorkout(model.getWorkout(otherUserId));
+    }
+
+    public boolean addWorkoutExercise(int otherUserId, String name, String sets,
+        String reps, String weight)
+    {
+        if (sets == null || reps == null || weight == null)
+        {
+            view.showError("Enter sets, reps, and weight.");
+            return false;
+        }
+        boolean added;
+        try
+        {
+            added = model.addWorkoutExercise(otherUserId, name, Integer.parseInt(sets.trim()),
+                Integer.parseInt(reps.trim()), Double.parseDouble(weight.trim()));
+        }
+        catch (NumberFormatException invalid)
+        {
+            view.showError("Sets and reps must be whole numbers, and weight must be a number.");
+            return false;
+        }
+        if (added)
+        {
+            view.showInfo("Exercise added.");
+            displayWorkout(otherUserId);
+        }
+        else
+        {
+            view.showError("Use a mutual match, a name, positive sets and reps, and a finite weight of zero or more.");
+        }
+        return added;
     }
 
     public void run(Scanner input)
@@ -173,7 +210,18 @@ public class SpotterController
                     sendChatMessage(Integer.parseInt(parts[1]),
                         parts.length == 3 ? parts[2] : "");
                     break;
+                case "exercise":
+                    String[] exercise = line.trim().split("\\s+", 6);
+                    if (exercise.length != 6)
+                    {
+                        view.showError("Usage: exercise <id> <sets> <reps> <weight> <name>");
+                        break;
+                    }
+                    addWorkoutExercise(Integer.parseInt(exercise[1]), exercise[5],
+                        exercise[2], exercise[3], exercise[4]);
+                    break;
                 case "chat":
+                case "workout":
                 case "user":
                     if (parts.length != 2)
                     {
@@ -184,6 +232,10 @@ public class SpotterController
                     if (parts[0].equals("chat"))
                     {
                         displayConversation(id);
+                    }
+                    else if (parts[0].equals("workout"))
+                    {
+                        displayWorkout(id);
                     }
                     else if (sessions.containsKey(id))
                     {

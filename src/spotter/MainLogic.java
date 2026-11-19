@@ -11,6 +11,7 @@ public class MainLogic
     private final ProfileManager profileManager;
     private final MatchManager matchManager;
     private final ChatManager chatManager;
+    private final WorkoutManager workoutManager;
     private final Map<Integer, UserProfile> profiles = new LinkedHashMap<>();
 
     public MainLogic(UserProfile currentUser)
@@ -21,13 +22,24 @@ public class MainLogic
     /** Pass the same ChatManager to user sessions to share matches and messages. */
     public MainLogic(UserProfile currentUser, ChatManager chatManager)
     {
+        this(currentUser, chatManager, chatManager == null ? null
+            : new WorkoutManager(chatManager.getMatchManager()));
+    }
+
+    MainLogic(UserProfile currentUser, ChatManager chatManager, WorkoutManager workoutManager)
+    {
         if (chatManager == null)
         {
             throw new IllegalArgumentException("Chat manager cannot be null");
         }
+        if (workoutManager == null || !workoutManager.uses(chatManager.getMatchManager()))
+        {
+            throw new IllegalArgumentException("Workout and chat must use the same match manager");
+        }
         profileManager = new ProfileManager(currentUser);
         this.currentUser = currentUser;
         this.chatManager = chatManager;
+        this.workoutManager = workoutManager;
         matchManager = chatManager.getMatchManager();
     }
 
@@ -39,6 +51,11 @@ public class MainLogic
     ChatManager getChatManager()
     {
         return chatManager;
+    }
+
+    WorkoutManager getWorkoutManager()
+    {
+        return workoutManager;
     }
 
     public boolean addProfile(UserProfile profile)
@@ -102,5 +119,17 @@ public class MainLogic
     public List<String> getConversation(int otherUserId)
     {
         return chatManager.getConversation(currentUser.getUserId(), otherUserId);
+    }
+
+    public boolean addWorkoutExercise(int otherUserId, String name, int sets,
+        int reps, double weight)
+    {
+        return workoutManager.addWorkoutExercise(currentUser.getUserId(), otherUserId,
+            name, sets, reps, weight);
+    }
+
+    public List<Workout.Exercise> getWorkout(int otherUserId)
+    {
+        return workoutManager.getWorkout(currentUser.getUserId(), otherUserId);
     }
 }

@@ -30,6 +30,40 @@ class SpotterSwingViewTest
     }
 
     @Test
+    void testSharedWorkoutReflectsExerciseAcrossMatchedViews() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            SpotterSwingView alice = new SpotterSwingView();
+            SpotterSwingView bob = alice.openPeerView(2);
+            JPanel alicePanel = alice.getPanel();
+            JPanel bobPanel = bob.getPanel();
+            JButton add = (JButton)find(alicePanel, "addExercise");
+            assertFalse(add.isEnabled());
+            ((JButton)find(alicePanel, "like")).doClick();
+            ((JButton)find(bobPanel, "like")).doClick();
+            ((JList<?>)find(alicePanel, "matches")).setSelectedIndex(0);
+            ((JList<?>)find(bobPanel, "matches")).setSelectedIndex(0);
+            assertTrue(add.isEnabled());
+            ((JTextField)find(alicePanel, "exerciseName")).setText("Push ups");
+            ((JTextField)find(alicePanel, "exerciseSets")).setText("zero");
+            add.doClick();
+            assertTrue(((JLabel)find(alicePanel, "status")).getText()
+                .contains("Sets and reps must be whole numbers"));
+            assertFalse(((JTextArea)find(bobPanel, "workout")).getText().contains("Push ups"));
+            ((JTextField)find(alicePanel, "exerciseSets")).setText("3");
+            ((JTextField)find(alicePanel, "exerciseReps")).setText("8");
+            ((JTextField)find(alicePanel, "exerciseWeight")).setText("0");
+            add.doClick();
+            assertTrue(((JTextArea)find(alicePanel, "workout")).getText().contains("Push ups"));
+            assertTrue(((JTextArea)find(bobPanel, "workout")).getText().contains("Push ups"));
+            ((JComboBox<?>)find(bobPanel, "users")).setSelectedIndex(2);
+            assertFalse(((JTextArea)find(bobPanel, "workout")).getText().contains("Push ups"));
+            alice.close();
+            bob.close();
+        });
+    }
+
+    @Test
     void testLiveChatBetweenIndependentViews() throws Exception
     {
         SwingUtilities.invokeAndWait(() -> {

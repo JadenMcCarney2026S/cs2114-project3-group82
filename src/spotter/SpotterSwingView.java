@@ -29,6 +29,12 @@ public class SpotterSwingView extends SpotterView
     private final DefaultListModel<UserProfile> matchItems = new DefaultListModel<>();
     private final JList<UserProfile> matches = new JList<>(matchItems);
     private final JTextArea conversation = new JTextArea();
+    private final JTextArea workout = new JTextArea();
+    private final JTextField exerciseName = new JTextField();
+    private final JTextField exerciseSets = new JTextField();
+    private final JTextField exerciseReps = new JTextField();
+    private final JTextField exerciseWeight = new JTextField();
+    private final JButton addExercise = new JButton("Add exercise");
     private final JTextField message = new JTextField();
     private final JButton send = button("Send", "send");
     private final JComboBox<String> users = new JComboBox<>();
@@ -127,7 +133,7 @@ public class SpotterSwingView extends SpotterView
         inbox.setBackground(SURFACE);
         inbox.setBorder(new EmptyBorder(20, 20, 20, 20));
         inbox.setPreferredSize(new Dimension(340, 480));
-        JLabel title = new JLabel("Your matches & messages");
+        JLabel title = new JLabel("Your matches");
         title.setFont(new Font("SansSerif", Font.BOLD, 19));
         title.setForeground(INK);
         inbox.add(title, BorderLayout.NORTH);
@@ -159,8 +165,11 @@ public class SpotterSwingView extends SpotterView
         conversation.setWrapStyleWord(true);
         conversation.setFont(new Font("SansSerif", Font.PLAIN, 15));
         conversation.setMargin(new Insets(12, 12, 12, 12));
+        JTabbedPane activities = new JTabbedPane();
+        activities.addTab("Messages", new JScrollPane(conversation));
+        activities.addTab("Shared workout", workoutPanel());
         JSplitPane chats = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-            new JScrollPane(matches), new JScrollPane(conversation));
+            new JScrollPane(matches), activities);
         chats.setDividerLocation(140);
         chats.setResizeWeight(0.35);
         chats.setBorder(BorderFactory.createLineBorder(SURFACE));
@@ -180,6 +189,7 @@ public class SpotterSwingView extends SpotterView
         compose.add(message, BorderLayout.CENTER);
         compose.add(send, BorderLayout.EAST);
         inbox.add(compose, BorderLayout.SOUTH);
+        activities.addChangeListener(event -> compose.setVisible(activities.getSelectedIndex() == 0));
 
         JPanel body = new JPanel(new BorderLayout(24, 0));
         body.setOpaque(false);
@@ -195,6 +205,7 @@ public class SpotterSwingView extends SpotterView
         users.addActionListener(event -> {
             matches.clearSelection();
             conversation.setText("");
+            clearExerciseFields();
             message.setText("");
             String selectedUser = (String)users.getSelectedItem();
             controller.handleCommand("user " + selectedUser.substring(selectedUser.lastIndexOf(" / ") + 3));
@@ -204,22 +215,83 @@ public class SpotterSwingView extends SpotterView
         matches.addListSelectionListener(event -> {
             if (!event.getValueIsAdjusting())
             {
+                clearExerciseFields();
                 UserProfile selected = matches.getSelectedValue();
                 if (selected != null)
                 {
                     controller.displayConversation(selected.getUserId());
+                    controller.displayWorkout(selected.getUserId());
+                }
+                else
+                {
+                    workout.setText("Select a mutual match to see your workout.");
                 }
                 updateComposer();
             }
         });
         send.addActionListener(event -> sendMessage());
         message.addActionListener(event -> sendMessage());
+        addExercise.addActionListener(event -> addExercise());
         controller.displayNextProfile();
         controller.displayMatches();
         updateComposer();
         showInfo("Like each other to start a conversation.");
         this.updates.addPropertyChangeListener(updateListener);
         chat.addMessageListener(messageListener);
+    }
+
+    private JPanel workoutPanel()
+    {
+        workout.setName("workout");
+        workout.setBackground(BACKGROUND);
+        workout.setForeground(INK);
+        workout.setEditable(false);
+        workout.setLineWrap(true);
+        workout.setWrapStyleWord(true);
+        workout.setMargin(new Insets(8, 8, 8, 8));
+        workout.setText("Select a mutual match to see your workout.");
+
+        JPanel fields = new JPanel(new GridLayout(0, 2, 6, 4));
+        addExerciseField(fields, "Exercise", "exerciseName", exerciseName);
+        addExerciseField(fields, "Sets", "exerciseSets", exerciseSets);
+        addExerciseField(fields, "Reps", "exerciseReps", exerciseReps);
+        addExerciseField(fields, "Weight (lb)", "exerciseWeight", exerciseWeight);
+        addExercise.setName("addExercise");
+        fields.add(addExercise);
+        JPanel routine = new JPanel(new BorderLayout(0, 6));
+        routine.add(new JScrollPane(workout), BorderLayout.CENTER);
+        routine.add(fields, BorderLayout.SOUTH);
+        return routine;
+    }
+
+    private static void addExerciseField(JPanel form, String text, String name, JTextField field)
+    {
+        JLabel label = new JLabel(text);
+        label.setLabelFor(field);
+        field.setName(name);
+        form.add(label);
+        form.add(field);
+    }
+
+    private void addExercise()
+    {
+        UserProfile selected = matches.getSelectedValue();
+        if (selected != null && controller.addWorkoutExercise(selected.getUserId(),
+            exerciseName.getText(), exerciseSets.getText(), exerciseReps.getText(),
+            exerciseWeight.getText()))
+        {
+            clearExerciseFields();
+            updates.firePropertyChange("workout", controller.getCurrentUserId(),
+                selected.getUserId());
+        }
+    }
+
+    private void clearExerciseFields()
+    {
+        for (JTextField field : List.of(exerciseName, exerciseSets, exerciseReps, exerciseWeight))
+        {
+            field.setText("");
+        }
     }
 
     private void showCreateProfile()
@@ -330,6 +402,11 @@ public class SpotterSwingView extends SpotterView
         boolean selected = matches.getSelectedValue() != null;
         message.setEnabled(selected);
         send.setEnabled(selected);
+        addExercise.setEnabled(selected);
+        for (JTextField field : List.of(exerciseName, exerciseSets, exerciseReps, exerciseWeight))
+        {
+            field.setEnabled(selected);
+        }
         message.setToolTipText(selected ? "Write a message" : "Select a mutual match first");
     }
 
@@ -364,6 +441,19 @@ public class SpotterSwingView extends SpotterView
 
     private void refreshPeer(PropertyChangeEvent event)
     {
+        if ("workout".equals(event.getPropertyName()))
+        {
+            UserProfile selected = matches.getSelectedValue();
+            int userId = controller.getCurrentUserId();
+            int author = (Integer)event.getOldValue();
+            int partner = (Integer)event.getNewValue();
+            if (selected != null && ((userId == author && selected.getUserId() == partner)
+                || (userId == partner && selected.getUserId() == author)))
+            {
+                controller.displayWorkout(selected.getUserId());
+            }
+            return;
+        }
         if ("profile".equals(event.getPropertyName()))
         {
             addAccount((UserProfile)event.getNewValue());
@@ -451,6 +541,12 @@ public class SpotterSwingView extends SpotterView
     {
         conversation.setText(messages.isEmpty() ? "Say hello to your gym partner."
             : String.join("\n\n", messages));
+    }
+
+    @Override
+    public void showWorkout(List<Workout.Exercise> exercises)
+    {
+        workout.setText(formatWorkout(exercises));
     }
 
     @Override

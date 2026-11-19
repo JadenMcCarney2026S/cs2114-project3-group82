@@ -21,13 +21,33 @@ class SpotterControllerTest
         UserProfile a = new UserProfile(1, "Alice", 20, Map.of("Running", "Beginner"));
         UserProfile b = new UserProfile(2, "Bob", 21, Map.of("Running", "Beginner"));
         ChatManager chat = new ChatManager(new MatchManager());
-        alice = new MainLogic(a, chat);
-        bob = new MainLogic(b, chat);
+        WorkoutManager workouts = new WorkoutManager(chat.getMatchManager());
+        alice = new MainLogic(a, chat, workouts);
+        bob = new MainLogic(b, chat, workouts);
         alice.addProfile(b);
         bob.addProfile(a);
         output = new ByteArrayOutputStream();
         controller = new SpotterController(Map.of(1, alice, 2, bob), 1,
             new SpotterView(new PrintStream(output)));
+    }
+
+    @Test
+    void testWorkoutCommandsEnforceMatchingAndValidateInput()
+    {
+        controller.run(new Scanner("exercise 2 3 8 0 Hidden exercise\nworkout 2\n"
+            + "right\nuser 2\nright\nexercise 1 3 8 0 Push ups\n"
+            + "exercise 1 two 8 0 Bad sets\nexercise 1 3 0 0 Bad reps\n"
+            + "exercise 1 3 8 Infinity Bad weight\nexercise 1 3 8 0\n"
+            + "user 1\nworkout 2\nquit\n"));
+
+        String text = output.toString();
+        assertTrue(text.contains("Use a mutual match"));
+        assertTrue(text.contains("Sets and reps must be whole numbers"));
+        assertTrue(text.contains("Usage: exercise"));
+        assertTrue(text.contains("Push ups"));
+        assertFalse(text.contains("Hidden exercise"));
+        assertEquals(1, alice.getWorkout(2).size());
+        assertEquals(alice.getWorkout(2), bob.getWorkout(1));
     }
 
     @Test
