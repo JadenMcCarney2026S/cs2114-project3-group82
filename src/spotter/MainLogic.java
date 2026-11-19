@@ -62,6 +62,11 @@ public class MainLogic
         return profileManager.getNextProfile();
     }
 
+    boolean canViewProfile(int otherUserId)
+    {
+        return profiles.containsKey(otherUserId);
+    }
+
     /** Null means no new match, including a valid swipe without a match. */
     public UserProfile swipeCurrentProfile(SwipeAction action)
     {

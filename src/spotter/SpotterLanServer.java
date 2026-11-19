@@ -20,7 +20,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import javax.net.ssl.SSLContext;
 
-/** Hosts the shared demo state on an explicitly selected network interface. */
+/** Hosts Spotter accounts and shared LAN state on an explicitly selected network interface. */
 public final class SpotterLanServer implements AutoCloseable
 {
     static final int HISTORY_LIMIT = 100;
@@ -35,21 +35,24 @@ public final class SpotterLanServer implements AutoCloseable
     }
 
     private final ChatManager chat = new ChatManager(new MatchManager(), HISTORY_LIMIT);
-    private final Map<Integer, MainLogic> sessions = SpotterApp.createSessions(chat);
+    private final Map<Integer, MainLogic> sessions = new LinkedHashMap<>();
     private final Map<Integer, Map<String, SentMessage>> sendIds = new LinkedHashMap<>();
-    private final Map<Integer, String> codes = new LinkedHashMap<>();
+    private final SpotterAccounts accounts;
     private final HttpsServer server;
     private final ThreadPoolExecutor workers = new ThreadPoolExecutor(8, 8, 0,
         TimeUnit.SECONDS, new ArrayBlockingQueue<>(32));
 
-    SpotterLanServer(String host, int port, SSLContext tls) throws IOException
+    SpotterLanServer(String host, int port, SSLContext tls, Path accountFile) throws IOException
     {
-        sessions.keySet().forEach(id -> codes.put(id, UUID.randomUUID().toString()));
+        accounts = new SpotterAccounts(accountFile);
+        accounts.profiles().forEach(profile -> register(profile.user()));
         configureHttpLimits();
         server = HttpsServer.create(new InetSocketAddress(host, port), 16);
         server.setHttpsConfigurator(new HttpsConfigurator(tls));
         server.setExecutor(workers);
         server.createContext("/chat", this::handle);
+        server.createContext("/account", new SpotterAccountHttp(accounts, this::register,
+            this::canView));
         server.start();
     }
 
@@ -58,9 +61,30 @@ public final class SpotterLanServer implements AutoCloseable
         return server.getAddress().getPort();
     }
 
-    String code(int userId)
+    private synchronized void register(UserProfile user)
     {
-        return codes.get(userId);
+        if (sessions.containsKey(user.getUserId()))
+        {
+            return;
+        }
+        MainLogic newSession = new MainLogic(user, chat);
+        for (MainLogic existing : sessions.values())
+        {
+            newSession.addProfile(existing.getCurrentUser());
+            existing.addProfile(user);
+        }
+        sessions.put(user.getUserId(), newSession);
+    }
+
+    private synchronized boolean canView(Integer actor, Integer target)
+    {
+        MainLogic session = sessions.get(actor);
+        return session != null && session.canViewProfile(target);
+    }
+
+    private synchronized MainLogic session(int userId)
+    {
+        return sessions.get(userId);
     }
 
     private void handle(HttpExchange exchange) throws IOException
@@ -77,13 +101,16 @@ public final class SpotterLanServer implements AutoCloseable
                 respond(exchange, 405, "POST required");
                 return;
             }
-            String token = exchange.getRequestHeaders().getFirst("Authorization");
-            MainLogic session = codes.entrySet().stream()
-                .filter(entry -> ("Bearer " + entry.getValue()).equals(token))
-                .map(entry -> sessions.get(entry.getKey())).findFirst().orElse(null);
+            SpotterAccounts.Session account = accounts.authenticate(SpotterAccountHttp.bearer(exchange));
+            if (account == null)
+            {
+                respond(exchange, 401, "Log in to continue.");
+                return;
+            }
+            MainLogic session = session(account.userId());
             if (session == null)
             {
-                respond(exchange, 401, "Invalid demo code");
+                respond(exchange, 403, "Complete your profile first.");
                 return;
             }
             byte[] body = exchange.getRequestBody().readNBytes(4097);
@@ -205,9 +232,9 @@ public final class SpotterLanServer implements AutoCloseable
 
     public static void main(String[] args) throws IOException, GeneralSecurityException
     {
-        if (args.length != 3)
+        if (args.length < 3 || args.length > 4)
         {
-            System.out.println("Usage: SpotterLanServer <host LAN IP> <port> <PKCS12 path>");
+            System.out.println("Usage: SpotterLanServer <host LAN IP> <port> <PKCS12 path> [account store path]");
             return;
         }
         char[] password = readPassword();
@@ -220,12 +247,14 @@ public final class SpotterLanServer implements AutoCloseable
         {
             Arrays.fill(password, '\0');
         }
-        SpotterLanServer host = new SpotterLanServer(args[0], Integer.parseInt(args[1]), tls);
+        Path accountFile = args.length == 4 ? Path.of(args[3])
+            : Path.of(System.getProperty("user.home"), ".spotter", "accounts.dat");
+        SpotterLanServer host = new SpotterLanServer(args[0], Integer.parseInt(args[1]), tls,
+            accountFile);
         System.out.printf("Spotter LAN server listening at https://%s:%d/chat%n",
             args[0], host.port());
-        host.sessions.forEach((id, session) -> System.out.printf("%s: %s%n",
-            session.getCurrentUser().getName(), host.code(id)));
     }
+
     private static char[] readPassword()
     {
         String configured = System.getenv("SPOTTER_KEYSTORE_PASSWORD");

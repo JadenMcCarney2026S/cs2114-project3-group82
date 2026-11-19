@@ -174,8 +174,11 @@ java -cp "$CONSOLE_OUT" spotter.SpotterLanServer 192.168.1.10 8080 \
 
 The server prompts for the host keystore password. For Eclipse launches that
 have no terminal prompt, set `SPOTTER_KEYSTORE_PASSWORD` in the local launch
-environment. Keep the server running and share only the public certificate
-(`.crt`) and each participant's own demo code.
+environment. Keep the server running and share its HTTPS address and public
+certificate (`.crt`) with participants. The server stores accounts and
+profiles in `~/.spotter/accounts.dat` by default. A fourth server argument
+selects a different path. Keep this file on the host since it contains private
+account and profile data.
 
 On every client computer, confirm that `keytool -printcert` reports the SHA-256
 fingerprint the host provided through a trusted channel before importing the
@@ -192,9 +195,16 @@ java -Djavax.net.ssl.trustStore="$HOME/spotter-lan-trust.p12" \
   -cp "$CONSOLE_OUT" spotter.SpotterLanView
 ```
 
-Enter the HTTPS URL printed by the server and the code for one demo account.
-Give each participant a different account code. The server starts with four
-demo accounts. Like each other's profiles, select the other person under
+Enter the HTTPS URL printed by the server and choose **Sign up** or **Log in**.
+Usernames must have 3–32 letters, digits, or underscores and passwords must
+have 12–128 characters. LAN discovery is for adults 18 and older. Add a
+display name, age, workout interest, and JPEG or
+PNG photo to complete your profile. The bio is optional. Returning users go
+straight to discovery or finish their profile if they left it incomplete.
+
+The LAN host starts with an empty roster. Create two accounts with the same
+workout interest to try discovery. Like each other's profiles and select
+the other person under
 **Mutual match**, and send a message. The conversation refreshes about once a
 second and retains the 100 most recent messages per pair. If a send is
 unconfirmed, retry the same draft. The server recognizes duplicate requests
@@ -202,7 +212,7 @@ for the last 256 successful sends per account. If the host's IP
 changes, generate and import a certificate for the new IP. If clients cannot
 connect, check that Wi-Fi allows connections between devices and that the host
 firewall allows inbound TCP on the chosen port. Closing the server clears
-matches and messages and invalidates the session codes.
+matches, messages, and login sessions. Accounts and photos persist.
 
 ### Create a demo profile
 
