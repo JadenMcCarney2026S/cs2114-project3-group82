@@ -350,3 +350,31 @@ separate from completed contributions.
 
 ## GenAI usage note
 
+The supplied specification reports ChatGPT assistance with MVC design, method
+signatures, data/state, validation, testing, and scope clarification. That is
+the document's account, not independently verified authorship of source files.
+
+For this deliverable, the team used Codex to inspect the requirements/repository,
+compare the implementation with the rubric, establish a test baseline, complete
+the independent Queue/model checks, implement the missing core workflow, connect
+a minimal console, and write an evidence-based README. Codex generated the new
+files attributed above, revised ProfileManager and tests, configured JUnit 5,
+and executed the reported compiler/test/process checks. Existing working Queue
+and profile behavior was reused. Earlier checks used Eclipse's batch compiler;
+Step 6 used javac with Java 17 and the cached JUnit runner.
+
+The team confirmed attribution, stretch-goal choices, and D4 owners. Manual GUI
+checks are reported separately from automated results; detailed human source
+review remains unconfirmed. The D4 impact prediction was prepared with Codex
+assistance and has not been validated by implementing the feature. Generated
+code is identified as AI-assisted, and unexecuted tests are not reported as
+passing.
+
+Carol now shares Running as well as Swimming, so Alice sees Bob, Carol, then
+Dave in FIFO order. This changes demo data only; shared-interest filtering is
+still enforced. Passing or liking Bob advances to Carol's photo.
+
+For Deliverable 4 :
+We used ChatGPT and Codex throughout Deliverable 4 to review our implementation against the assignment requirements and rubric, identify missing functionality, and clarify how the different parts of Spotter should work together. We used GenAI to help review our MVC structure, discuss the integration of the Model, View, and Controller, and plan the implementation of our shared workout feature. We also used it for feedback on method design, debugging, JUnit test cases, invalid-input handling, and README documentation, including the Reflection and Next Steps sections.
+
+We reviewed and adapted the suggestions to fit our existing codebase, project scope, and team responsibilities. GenAI served as a tool for feedback, clarification, and debugging, while we remained responsible for our design decisions, implementation, testing, and integration. We verified the functionality ourselves and distinguished between automated test results and manual checks rather than reporting unverified results as successful.
