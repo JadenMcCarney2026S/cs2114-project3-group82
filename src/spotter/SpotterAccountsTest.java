@@ -69,6 +69,22 @@ class SpotterAccountsTest
     }
 
     @Test
+    void rejectsInvalidCredentialsAndOversizedUploadsWithoutSaving()
+        throws Exception
+    {
+        SpotterAccounts accounts = new SpotterAccounts(temp.resolve("accounts.bin"));
+        String password = UUID.randomUUID().toString();
+        assertThrows(IllegalArgumentException.class, () -> accounts.signUp("a?", password));
+        assertThrows(IllegalArgumentException.class, () -> accounts.signUp("runner", "short"));
+        assertThrows(IllegalArgumentException.class,
+            () -> accounts.signUp("runner", "x".repeat(129)));
+        var session = accounts.signUp("runner", password);
+        assertThrows(IllegalArgumentException.class, () -> accounts.complete(session.userId(),
+            "Runner", 21, "Running", "", new byte[SpotterAccounts.MAX_PHOTO_BYTES + 1]));
+        assertNull(accounts.profile(session.userId()));
+    }
+
+    @Test
     void expiresSessionsAndLimitsRepeatedFailures() throws Exception
     {
         TestClock clock = new TestClock();

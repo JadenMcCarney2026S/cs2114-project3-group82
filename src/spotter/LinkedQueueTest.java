@@ -141,6 +141,21 @@ class LinkedQueueTest
     }
 
     @Test
+    void interleavedEnqueueAndDequeuePreserveFifoOrder()
+    {
+        LinkedQueue<String> queue = new LinkedQueue<>();
+        queue.enqueue("A");
+        queue.enqueue("B");
+        assertEquals("A", queue.dequeue());
+        queue.enqueue("C");
+        assertEquals(2, queue.getSize());
+        assertEquals("B", queue.peek());
+        assertEquals("B", queue.dequeue());
+        assertEquals("C", queue.dequeue());
+        assertTrue(queue.isEmpty());
+    }
+
+    @Test
     void testGetSize()
     {
         LinkedQueue<String> queue = new LinkedQueue<>();
