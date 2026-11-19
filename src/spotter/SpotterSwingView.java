@@ -14,13 +14,18 @@ import javax.swing.border.EmptyBorder;
 /** Optional desktop presentation; business rules stay in the existing model. */
 public class SpotterSwingView extends SpotterView
 {
-    private static final Color INK = new Color(225, 239, 230);
-    private static final Color ACCENT = new Color(77, 230, 142);
-    private static final Color BACKGROUND = new Color(9, 13, 11);
-    private static final Color SURFACE = new Color(20, 28, 23);
-    private static final Color MUTED = new Color(149, 174, 158);
+    private static final Color INK = new Color(30, 39, 34);
+    private static final Color ACCENT = new Color(39, 80, 57);
+    private static final Color BACKGROUND = new Color(244, 243, 235);
+    private static final Color SURFACE = new Color(255, 254, 250);
+    private static final Color MUTED = new Color(76, 91, 80);
+    private static final Color LINE = new Color(169, 180, 169);
+    private static final Color SELECTED = new Color(220, 233, 221);
+    private static final int PORTRAIT_WIDTH = 348;
+    private static final int PORTRAIT_HEIGHT = 420;
     private final JPanel panel = new JPanel(new BorderLayout(24, 24));
-    private final JLabel name = new JLabel("Discover", SwingConstants.CENTER);
+    private final SwipeCard card = new SwipeCard();
+    private final JLabel name = new JLabel("Discover");
     private final JTextArea details = new JTextArea();
     private final JLabel avatar = new JLabel("S", SwingConstants.CENTER);
     private final JLabel status = new JLabel("Like someone to get started.");
@@ -45,6 +50,7 @@ public class SpotterSwingView extends SpotterView
     private final ChatManager chat;
     private final SpotterController controller;
     private boolean closed;
+    private boolean candidateAvailable;
 
     public SpotterSwingView()
     {
@@ -72,8 +78,8 @@ public class SpotterSwingView extends SpotterView
 
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        JLabel brand = new JLabel("spotter.");
-        brand.setFont(new Font("SansSerif", Font.BOLD, 34));
+        JLabel brand = new JLabel("Spotter");
+        brand.setFont(new Font("Serif", Font.BOLD, 35));
         brand.setForeground(ACCENT);
         header.add(brand, BorderLayout.WEST);
         JPanel account = new JPanel(new FlowLayout(FlowLayout.RIGHT));
@@ -93,24 +99,22 @@ public class SpotterSwingView extends SpotterView
         header.add(account, BorderLayout.EAST);
         panel.add(header, BorderLayout.NORTH);
 
-        JPanel card = new JPanel(new BorderLayout(12, 12));
         card.setBackground(SURFACE);
-        card.setBorder(new EmptyBorder(24, 24, 24, 24));
-        JLabel intro = new JLabel("FIND YOUR NEXT GYM PARTNER", SwingConstants.CENTER);
-        intro.setForeground(MUTED);
-        card.add(intro, BorderLayout.NORTH);
-        JPanel identity = new JPanel(new BorderLayout(0, 12));
+        card.setBorder(new EmptyBorder(26, 30, 26, 30));
+        JPanel identity = new JPanel(new GridLayout(1, 2, 32, 0));
         identity.setOpaque(false);
-        avatar.setOpaque(true);
-        avatar.setBackground(new Color(22, 55, 36));
         avatar.setForeground(ACCENT);
-        avatar.setFont(new Font("SansSerif", Font.BOLD, 68));
-        name.setFont(new Font("SansSerif", Font.BOLD, 30));
-        name.setForeground(INK);
+        avatar.setFont(new Font("Serif", Font.BOLD, 70));
         avatar.setName("avatar");
-        identity.add(avatar, BorderLayout.CENTER);
-        JPanel profileInfo = new JPanel(new BorderLayout(0, 8));
+        avatar.getAccessibleContext().setAccessibleName("Profile photo");
+        identity.add(avatar);
+
+        JPanel profileInfo = new JPanel(new BorderLayout(0, 18));
         profileInfo.setOpaque(false);
+        profileInfo.setBorder(new EmptyBorder(28, 0, 0, 14));
+        name.setFont(new Font("Serif", Font.BOLD, 43));
+        name.setForeground(INK);
+        name.putClientProperty("html.disable", true);
         profileInfo.add(name, BorderLayout.NORTH);
         details.setForeground(MUTED);
         details.setName("details");
@@ -118,10 +122,12 @@ public class SpotterSwingView extends SpotterView
         details.setEditable(false);
         details.setLineWrap(true);
         details.setWrapStyleWord(true);
-        details.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        details.setPreferredSize(new Dimension(400, 115));
-        profileInfo.add(details, BorderLayout.CENTER);
-        identity.add(profileInfo, BorderLayout.SOUTH);
+        details.setFont(new Font("SansSerif", Font.PLAIN, 17));
+        JScrollPane intro = new JScrollPane(details);
+        intro.setBorder(BorderFactory.createEmptyBorder());
+        intro.getViewport().setBackground(SURFACE);
+        profileInfo.add(intro, BorderLayout.CENTER);
+        identity.add(profileInfo);
         card.add(identity, BorderLayout.CENTER);
         JPanel actions = new JPanel(new GridLayout(1, 2, 16, 0));
         actions.setOpaque(false);
@@ -147,7 +153,7 @@ public class SpotterSwingView extends SpotterView
         message.setCaretColor(ACCENT);
         message.setDisabledTextColor(MUTED);
         message.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            BorderFactory.createLineBorder(LINE),
             new EmptyBorder(8, 10, 8, 10)));
         compose.add(message, BorderLayout.CENTER);
         compose.add(send, BorderLayout.EAST);
@@ -161,11 +167,35 @@ public class SpotterSwingView extends SpotterView
         sections.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI()
         {
             @Override
+            protected void installDefaults()
+            {
+                super.installDefaults();
+                tabInsets = new Insets(9, 16, 9, 16);
+            }
+
+            @Override
             protected void paintTabBackground(Graphics graphics, int placement, int index,
                 int x, int y, int width, int height, boolean selected)
             {
-                graphics.setColor(selected ? new Color(30, 75, 46) : SURFACE);
+                graphics.setColor(selected ? SELECTED : SURFACE);
                 graphics.fillRect(x, y, width, height);
+            }
+
+            @Override
+            protected void paintTabBorder(Graphics graphics, int placement, int index,
+                int x, int y, int width, int height, boolean selected)
+            {
+                if (selected)
+                {
+                    graphics.setColor(ACCENT);
+                    graphics.fillRect(x, y + height - 2, width, 2);
+                }
+            }
+
+            @Override
+            protected void paintContentBorder(Graphics graphics, int placement, int index)
+            {
+                // Each Spotter screen supplies its own panel boundary.
             }
         });
         sections.setBackground(BACKGROUND);
@@ -195,6 +225,7 @@ public class SpotterSwingView extends SpotterView
         pass.addActionListener(event -> swipe(SwipeAction.LEFT));
         like.addActionListener(event -> swipe(SwipeAction.RIGHT));
         users.addActionListener(event -> {
+            card.stopFeedback();
             matches.clearSelection();
             conversation.setText("");
             clearExerciseFields();
@@ -236,8 +267,8 @@ public class SpotterSwingView extends SpotterView
     {
         list.setBackground(BACKGROUND);
         list.setForeground(INK);
-        list.setSelectionBackground(new Color(30, 75, 46));
-        list.setSelectionForeground(ACCENT);
+        list.setSelectionBackground(SELECTED);
+        list.setSelectionForeground(INK);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
         list.setCellRenderer(new DefaultListCellRenderer()
         {
@@ -249,7 +280,7 @@ public class SpotterSwingView extends SpotterView
                     list, value, index, selected, focus);
                 UserProfile profile = (UserProfile)value;
                 label.putClientProperty("html.disable", true);
-                label.setText(profile.getName() + "  /  " + profile.getUserId());
+                label.setText(profile.getName());
                 label.setBorder(new EmptyBorder(9, 10, 9, 10));
                 return label;
             }
@@ -324,7 +355,7 @@ public class SpotterSwingView extends SpotterView
         field.setCaretColor(ACCENT);
         field.setDisabledTextColor(MUTED);
         field.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            BorderFactory.createLineBorder(LINE),
             new EmptyBorder(8, 10, 8, 10)));
         JPanel group = new JPanel(new BorderLayout(0, 4));
         group.setOpaque(false);
@@ -441,12 +472,13 @@ public class SpotterSwingView extends SpotterView
         result.setName(componentName);
         result.setUI(new javax.swing.plaf.basic.BasicButtonUI());
         result.setOpaque(true);
-        result.setBackground(componentName.equals("pass") ? SURFACE : ACCENT);
+        boolean primary = !componentName.equals("pass") && !componentName.equals("create");
+        result.setBackground(primary ? ACCENT : SURFACE);
         result.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            BorderFactory.createLineBorder(LINE),
             new EmptyBorder(8, 12, 8, 12)));
         result.setFont(new Font("SansSerif", Font.BOLD, 16));
-        result.setForeground(componentName.equals("pass") ? INK : BACKGROUND);
+        result.setForeground(primary ? SURFACE : INK);
         result.setPreferredSize(new Dimension(100, 48));
         return result;
     }
@@ -455,6 +487,7 @@ public class SpotterSwingView extends SpotterView
     {
         controller.handleSwipe(action);
         updates.firePropertyChange("swipe", null, null);
+        card.play(action);
     }
 
     private void updateComposer()
@@ -536,8 +569,8 @@ public class SpotterSwingView extends SpotterView
     public void showProfile(UserProfile profile)
     {
         boolean available = profile != null;
-        pass.setEnabled(available);
-        like.setEnabled(available);
+        candidateAvailable = available;
+        updateSwipeButtons();
         avatar.setIcon(null);
         if (available)
         {
@@ -549,19 +582,77 @@ public class SpotterSwingView extends SpotterView
                 ImageIcon original = new ImageIcon(resource);
                 if (original.getIconWidth() > 0 && original.getIconHeight() > 0)
                 {
-                    int height = 290;
-                    int width = original.getIconWidth() * height / original.getIconHeight();
-                    avatar.setIcon(new ImageIcon(original.getImage().getScaledInstance(
-                        Math.max(1, width), height, Image.SCALE_SMOOTH)));
+                    avatar.setIcon(profilePortrait(original));
                 }
             }
         }
         avatar.setText(avatar.getIcon() != null ? "" : available ? profile.getName().substring(0, 1).toUpperCase() : "-");
         name.setText(available ? profile.getName() + ", " + profile.getAge() : "All caught up");
-        details.setText(available ? "Interests: " + profile.getWorkoutExperience()
-            + "\nGoal: " + profile.getGoal() + "\nGym: " + profile.getGym()
-            + "\nTime: " + profile.getPreferredTime() + "\nAbout: " + profile.getBio()
-            : "No eligible profiles left. Try another demo account.");
+        name.setToolTipText(available ? "Profile: " + name.getText() : null);
+        if (!available)
+        {
+            details.setText("No eligible profiles left. Try another demo account.");
+            return;
+        }
+        var interests = new java.util.StringJoiner(", ");
+        profile.getWorkoutExperience().forEach((activity, level) ->
+            interests.add(activity + " (" + level + ")"));
+        StringBuilder bio = new StringBuilder();
+        appendProfileDetail(bio, "", profile.getBio());
+        appendProfileDetail(bio, "Training", interests.toString());
+        appendProfileDetail(bio, "Goal", profile.getGoal());
+        appendProfileDetail(bio, "Gym", profile.getGym());
+        appendProfileDetail(bio, "Preferred time", profile.getPreferredTime());
+        details.setText(bio.toString());
+        details.setCaretPosition(0);
+    }
+
+    private void updateSwipeButtons()
+    {
+        boolean ready = !closed && candidateAvailable && card.action == null;
+        pass.setEnabled(ready);
+        like.setEnabled(ready);
+    }
+
+    private static void appendProfileDetail(StringBuilder bio, String label, String value)
+    {
+        if (!value.isBlank())
+        {
+            if (bio.length() > 0)
+            {
+                bio.append("\n\n");
+            }
+            if (!label.isEmpty())
+            {
+                bio.append(label).append(" · ");
+            }
+            bio.append(value);
+        }
+    }
+
+    private static ImageIcon profilePortrait(ImageIcon source)
+    {
+        double scale = Math.max((double)PORTRAIT_WIDTH / source.getIconWidth(),
+            (double)PORTRAIT_HEIGHT / source.getIconHeight());
+        int width = (int)Math.ceil(source.getIconWidth() * scale);
+        int height = (int)Math.ceil(source.getIconHeight() * scale);
+        var portrait = new java.awt.image.BufferedImage(PORTRAIT_WIDTH, PORTRAIT_HEIGHT,
+            java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = portrait.createGraphics();
+        try
+        {
+            graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            graphics.setClip(new java.awt.geom.RoundRectangle2D.Double(0, 0, PORTRAIT_WIDTH,
+                PORTRAIT_HEIGHT, 24, 24));
+            graphics.drawImage(source.getImage(), (PORTRAIT_WIDTH - width) / 2,
+                (int)((PORTRAIT_HEIGHT - height) * 0.30), width, height, null);
+        }
+        finally
+        {
+            graphics.dispose();
+        }
+        return new ImageIcon(portrait);
     }
 
     @Override
@@ -600,7 +691,27 @@ public class SpotterSwingView extends SpotterView
     public void showChat(List<String> messages)
     {
         conversation.setText(messages.isEmpty() ? "Say hello to your gym partner."
-            : String.join("\n\n", messages));
+            : String.join("\n\n", messages.stream().map(this::withSenderName).toList()));
+    }
+
+    private String withSenderName(String message)
+    {
+        int separator = message.indexOf(": ");
+        if (separator <= 0)
+        {
+            return message;
+        }
+        try
+        {
+            int senderId = Integer.parseInt(message.substring(0, separator));
+            MainLogic sender = sessions.get(senderId);
+            String senderName = sender == null ? "Unknown sender" : sender.getCurrentUser().getName();
+            return senderName + message.substring(separator);
+        }
+        catch (NumberFormatException alreadyLabeled)
+        {
+            return message;
+        }
     }
 
     @Override
@@ -636,8 +747,121 @@ public class SpotterSwingView extends SpotterView
     void close()
     {
         closed = true;
+        card.stopFeedback();
         updates.removePropertyChangeListener(updateListener);
         chat.removeMessageListener(messageListener);
+    }
+
+    private final class SwipeCard extends JPanel
+    {
+        private static final long FEEDBACK_NANOS = 680_000_000L;
+        private static final Color LIKE_COLOR = new Color(0xC7FC7B);
+        private static final Color PASS_COLOR = new Color(0xFFC49B);
+        private final boolean reducedMotion = Boolean.getBoolean("spotter.reduceMotion");
+        private final Timer feedback = new Timer(16, event -> advanceFeedback());
+        private long started;
+        private double progress;
+        private SwipeAction action;
+
+        SwipeCard()
+        {
+            super(new BorderLayout(12, 12));
+            setName("discoveryCard");
+        }
+
+        void play(SwipeAction swipe)
+        {
+            action = swipe;
+            started = System.nanoTime();
+            progress = 0;
+            feedback.restart();
+            updateSwipeButtons();
+            repaint();
+        }
+
+        void stopFeedback()
+        {
+            feedback.stop();
+            action = null;
+            updateSwipeButtons();
+            repaint();
+        }
+
+        private void advanceFeedback()
+        {
+            progress = Math.min(1, (double)(System.nanoTime() - started) / FEEDBACK_NANOS);
+            if (progress >= 1)
+            {
+                stopFeedback();
+            }
+            else
+            {
+                repaint();
+            }
+        }
+
+        @Override
+        protected void paintChildren(Graphics graphics)
+        {
+            super.paintChildren(graphics);
+            if (action == null)
+            {
+                return;
+            }
+            boolean liked = action == SwipeAction.RIGHT;
+            int direction = liked ? 1 : -1;
+            double slide = reducedMotion ? 0 : Math.max(0, (progress - 0.32) / 0.68);
+            double eased = slide * slide * (3 - 2 * slide);
+            int width = getWidth();
+            int height = getHeight();
+            Graphics2D overlay = (Graphics2D)graphics.create();
+            try
+            {
+                overlay.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                    RenderingHints.VALUE_ANTIALIAS_ON);
+                overlay.translate(direction * (int)(eased * width), 0);
+                overlay.setColor(liked ? LIKE_COLOR : PASS_COLOR);
+                overlay.fillRect(0, 0, width, height);
+
+                overlay.setColor(new Color(30, 39, 34, 65));
+                overlay.setStroke(new BasicStroke(2f));
+                overlay.drawRoundRect(24, 24, width - 48, height - 48, 36, 36);
+                overlay.drawRoundRect(36, 36, width - 72, height - 72, 26, 26);
+
+                overlay.setColor(INK);
+                int centerX = width / 2;
+                int centerY = height / 2;
+                paintMark(overlay, centerX, centerY - 58, liked);
+                String label = liked ? "LIKED!" : "PASSED…";
+                overlay.setFont(new Font("SansSerif", Font.BOLD, 78));
+                overlay.drawString(label,
+                    centerX - overlay.getFontMetrics().stringWidth(label) / 2, centerY + 77);
+            }
+            finally
+            {
+                overlay.dispose();
+            }
+        }
+
+        private static void paintMark(Graphics2D graphics, int x, int y, boolean liked)
+        {
+            graphics.setStroke(new BasicStroke(4f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            graphics.drawOval(x - 42, y - 42, 84, 84);
+            if (liked)
+            {
+                var heart = new java.awt.geom.Path2D.Double();
+                heart.moveTo(x, y + 25);
+                heart.curveTo(x - 52, y - 12, x - 16, y - 34, x, y - 11);
+                heart.curveTo(x + 16, y - 34, x + 52, y - 12, x, y + 25);
+                graphics.fill(heart);
+            }
+            else
+            {
+                graphics.drawLine(x + 22, y, x - 22, y);
+                graphics.drawLine(x - 22, y, x - 5, y - 14);
+                graphics.drawLine(x - 22, y, x - 5, y + 14);
+            }
+        }
     }
 
     private void showWindow(int offset)

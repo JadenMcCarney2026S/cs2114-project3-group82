@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import java.util.Map;
 import java.awt.Component;
 import java.awt.Container;
+import java.awt.image.BufferedImage;
 import javax.swing.*;
 import org.junit.jupiter.api.Test;
 
@@ -27,6 +28,74 @@ class SpotterSwingViewTest
             }
         }
         return null;
+    }
+
+    @Test
+    void testSwipesCoverTheCardWithoutAllowingAClickThrough()
+        throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            SpotterSwingView view = new SpotterSwingView();
+            JPanel panel = view.getPanel();
+            panel.setSize(panel.getPreferredSize());
+            layout(panel);
+            Component card = find(panel, "discoveryCard");
+            assertNotNull(card);
+
+            ((JButton)find(panel, "like")).doClick(0);
+            assertTrue(((JTextArea)find(panel, "details")).getText().contains("Swimming"));
+            assertTrue(coversCardWithColor(card, 0xC7FC7B));
+
+            JButton pass = (JButton)find(panel, "pass");
+            assertFalse(pass.isEnabled());
+            pass.doClick(0);
+            assertTrue(((JTextArea)find(panel, "details")).getText().contains("Swimming"));
+            waitForSwipeControls(pass);
+            pass.doClick(0);
+            assertFalse(((JTextArea)find(panel, "details")).getText().contains("Swimming"));
+            assertTrue(coversCardWithColor(card, 0xFFC49B));
+            assertFalse(coversCardWithColor(card, 0xC7FC7B));
+            view.close();
+        });
+    }
+
+    private static void waitForSwipeControls(JButton action)
+    {
+        var loop = java.awt.Toolkit.getDefaultToolkit().getSystemEventQueue().createSecondaryLoop();
+        long deadline = System.nanoTime() + 3_000_000_000L;
+        Timer check = new Timer(25, event -> {
+            if (action.isEnabled() || System.nanoTime() >= deadline)
+            {
+                loop.exit();
+            }
+        });
+        check.start();
+        try
+        {
+            loop.enter();
+        }
+        finally
+        {
+            check.stop();
+        }
+        assertTrue(action.isEnabled(), "Swipe controls did not return");
+    }
+
+    private static boolean coversCardWithColor(Component card, int rgb)
+    {
+        BufferedImage image = new BufferedImage(card.getWidth(), card.getHeight(),
+            BufferedImage.TYPE_INT_RGB);
+        var graphics = image.createGraphics();
+        try
+        {
+            card.paint(graphics);
+        }
+        finally
+        {
+            graphics.dispose();
+        }
+        return (image.getRGB(16, 16) & 0xFFFFFF) == rgb
+            && (image.getRGB(card.getWidth() - 16, card.getHeight() - 16) & 0xFFFFFF) == rgb;
     }
 
     @Test
@@ -119,9 +188,9 @@ class SpotterSwingViewTest
             JTextArea aliceHistory = (JTextArea)find(alicePanel, "conversation");
             JTextArea bobHistory = (JTextArea)find(bobPanel, "conversation");
             send(alicePanel, "Hi Bob");
-            assertEquals("1: Hi Bob", bobHistory.getText());
-            send(bobPanel, "Hi Alice");
-            assertEquals("1: Hi Bob\n\n2: Hi Alice", aliceHistory.getText());
+            assertEquals("Alice: Hi Bob", bobHistory.getText());
+            send(bobPanel, "Hi Alice: see you at 6");
+            assertEquals("Alice: Hi Bob\n\nBob: Hi Alice: see you at 6", aliceHistory.getText());
             send(bobPanel, "   ");
             assertEquals(aliceHistory.getText(), bobHistory.getText());
             ((JComboBox<?>)find(bobPanel, "users")).setSelectedIndex(2);
@@ -183,7 +252,7 @@ class SpotterSwingViewTest
             matches.setSelectedIndex(0);
             message.setText("Hello Alice");
             send.doClick();
-            assertTrue(history.getText().contains("2: Hello Alice"));
+            assertTrue(history.getText().contains("Bob: Hello Alice"));
             message.setText("   ");
             send.doClick();
             assertTrue(((JLabel)find(panel, "status")).getText().contains("rejected"));
@@ -192,8 +261,8 @@ class SpotterSwingViewTest
             matches.setSelectedIndex(0);
             message.setText("Hi Bob");
             send.doClick();
-            assertTrue(history.getText().contains("2: Hello Alice"));
-            assertTrue(history.getText().contains("1: Hi Bob"));
+            assertTrue(history.getText().contains("Bob: Hello Alice"));
+            assertTrue(history.getText().contains("Alice: Hi Bob"));
             users.setSelectedIndex(2);
             assertEquals(0, matches.getModel().getSize());
             assertFalse(send.isEnabled());
@@ -210,10 +279,12 @@ class SpotterSwingViewTest
             JButton pass = (JButton)find(panel, "pass");
             JButton like = (JButton)find(panel, "like");
             pass.doClick();
+            waitForSwipeControls(pass);
             assertTrue(pass.isEnabled());
             assertTrue(((JTextArea)find(panel, "details")).getText().contains("Swimming"));
             assertNotNull(((JLabel)find(panel, "avatar")).getIcon());
             pass.doClick();
+            waitForSwipeControls(pass);
             assertTrue(pass.isEnabled());
             pass.doClick();
             assertFalse(pass.isEnabled());
@@ -242,8 +313,11 @@ class SpotterSwingViewTest
             users.setSelectedIndex(0);
             JButton pass = (JButton)find(panel, "pass");
             pass.doClick(); // Bob
+            waitForSwipeControls(pass);
             pass.doClick(); // Carol
+            waitForSwipeControls(pass);
             pass.doClick(); // Dave
+            waitForSwipeControls(pass);
             assertTrue(((JTextArea)find(panel, "details")).getText().contains("Build stamina"));
             like.doClick(); // Alice likes Eve.
             JList<?> matches = (JList<?>)find(panel, "matches");
@@ -253,7 +327,7 @@ class SpotterSwingViewTest
             ((JButton)find(panel, "send")).doClick();
             users.setSelectedIndex(4);
             matches.setSelectedIndex(0);
-            assertTrue(((JTextArea)find(panel, "conversation")).getText().contains("Welcome Eve"));
+            assertEquals("Alice: Welcome Eve", ((JTextArea)find(panel, "conversation")).getText());
         });
     }
 
@@ -267,8 +341,8 @@ class SpotterSwingViewTest
             {
                 view.showProfile(new UserProfile(id, "Demo", 20, Map.of()));
                 assertNotNull(avatar.getIcon(), "Missing demo photo for " + id);
-                assertTrue(avatar.getIcon().getIconWidth() > 0);
-                assertEquals(290, avatar.getIcon().getIconHeight());
+                assertEquals(348, avatar.getIcon().getIconWidth());
+                assertEquals(420, avatar.getIcon().getIconHeight());
                 assertEquals("", avatar.getText());
             }
             view.showProfile(new UserProfile(99, "Eve", 20, Map.of()));
