@@ -373,3 +373,8 @@ passing.
 Carol now shares Running as well as Swimming, so Alice sees Bob, Carol, then
 Dave in FIFO order. This changes demo data only; shared-interest filtering is
 still enforced. Passing or liking Bob advances to Carol's photo.
+
+For Deliverable 4 :
+We used ChatGPT and Codex throughout Deliverable 4 to review our implementation against the assignment requirements and rubric, identify missing functionality, and clarify how the different parts of Spotter should work together. We used GenAI to help review our MVC structure, discuss the integration of the Model, View, and Controller, and plan the implementation of our shared workout feature. We also used it for feedback on method design, debugging, JUnit test cases, invalid-input handling, and README documentation, including the Reflection and Next Steps sections.
+
+We reviewed and adapted the suggestions to fit our existing codebase, project scope, and team responsibilities. GenAI served as a tool for feedback, clarification, and debugging, while we remained responsible for our design decisions, implementation, testing, and integration. We verified the functionality ourselves and distinguished between automated test results and manual checks rather than reporting unverified results as successful.
