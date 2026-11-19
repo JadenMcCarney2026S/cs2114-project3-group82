@@ -154,6 +154,31 @@ without a photo use their initial.
 SpotterApp.createSessions is shared by console and desktop launchers; each new
 launch starts fresh in-memory state. The original console remains available.
 
+### Run Spotter on an Android emulator
+
+The Android app lives in `android/` and uses the same account, profile,
+discovery, and chat server as the desktop app. Install Android Studio with the
+Android 35 SDK, Build Tools 35.0.0, Platform-Tools, and Android Emulator.
+Create an API 28 or newer virtual device and start it. The project uses
+JDK 17 and its included Gradle Wrapper.
+
+From the project folder with Docker running, execute:
+
+```sh
+sh scripts/spotter-android.sh
+```
+
+The launcher starts the Compose server, includes its public HTTPS certificate
+in the debug build, forwards port 8443 with ADB, and installs and opens Spotter.
+If more than one Android device is connected, set `ANDROID_SERIAL` to the
+emulator serial shown by `adb devices`. For an existing local Spotter HTTPS
+server using port 8443 and a certificate for `127.0.0.1`, pass its public
+certificate as the only argument. The certificate is refreshed on each
+launcher run and excluded from Git.
+
+Choose **Sign up**, then add a profile photo. To test discovery and chat, use
+two accounts on separate clients with the same workout interest.
+
 ### Run the Swing app with Docker
 
 Install and start Docker Desktop or Docker Engine with Compose. The computer
