@@ -50,7 +50,7 @@ java -jar "$JUNIT" execute --class-path "$MODEL_OUT" \
 
 This compilation excludes every View, Controller, launcher, and UI test file,
 including the separately merged ProfileView, MatchesView, and ChatView.
-The D4 verification run passed 44 independent model tests and 88 tests in the
+The D4 verification run passed 44 independent model tests and 89 tests in the
 full desktop and HTTPS suite. The console guided demo was also run through
 completion with the shared-workout steps.
 
@@ -157,12 +157,14 @@ java -cp "$CONSOLE_OUT" spotter.SpotterSwingView
 ```
 
 In Eclipse, run `SpotterSwingView.java` as a Java Application. The app opens one
-window for Alice and one for Bob. Like Bob in Alice's window and like Alice in
-Bob's window. Select the resulting match in both windows, then send a message
-from either window. The message appears in both conversations automatically.
+window for Alice and one for Bob. In **Discovery**, like Bob in Alice's
+window and like Alice in Bob's window. Open **Messages**, select the resulting
+match in both windows, then send a message from either window. The message
+appears in both conversations automatically.
 Switching either window to Carol clears the open conversation. Both windows
 share the same in-memory demo state within one Java process.
-With a mutual match selected, open **Shared workout**, enter an exercise
+Open **Shared workout** to use the full-width routine panel. Choose a mutual
+match, enter an exercise
 name, sets, repetitions, and weight in pounds, then choose **Add exercise**.
 Both participants can read the routine. Enter 0 lb for bodyweight exercises.
 Pass and Like disable when a queue is exhausted. The dropdown is demo identity

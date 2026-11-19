@@ -34,7 +34,7 @@ public class SpotterSwingView extends SpotterView
     private final JTextField exerciseSets = new JTextField();
     private final JTextField exerciseReps = new JTextField();
     private final JTextField exerciseWeight = new JTextField();
-    private final JButton addExercise = new JButton("Add exercise");
+    private final JButton addExercise = button("Add exercise", "addExercise");
     private final JTextField message = new JTextField();
     private final JButton send = button("Send", "send");
     private final JComboBox<String> users = new JComboBox<>();
@@ -129,34 +129,8 @@ public class SpotterSwingView extends SpotterView
         actions.add(like);
         card.add(actions, BorderLayout.SOUTH);
 
-        JPanel inbox = new JPanel(new BorderLayout(10, 12));
-        inbox.setBackground(SURFACE);
-        inbox.setBorder(new EmptyBorder(20, 20, 20, 20));
-        inbox.setPreferredSize(new Dimension(340, 480));
-        JLabel title = new JLabel("Your matches");
-        title.setFont(new Font("SansSerif", Font.BOLD, 19));
-        title.setForeground(INK);
-        inbox.add(title, BorderLayout.NORTH);
         matches.setName("matches");
-        matches.setBackground(BACKGROUND);
-        matches.setForeground(INK);
-        matches.setSelectionBackground(new Color(30, 75, 46));
-        matches.setSelectionForeground(ACCENT);
-        matches.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        matches.setCellRenderer(new DefaultListCellRenderer()
-        {
-            @Override
-            public Component getListCellRendererComponent(JList<?> list,
-                Object value, int index, boolean selected, boolean focus)
-            {
-                JLabel label = (JLabel)super.getListCellRendererComponent(
-                    list, value, index, selected, focus);
-                UserProfile profile = (UserProfile)value;
-                label.setText(profile.getName() + "  /  " + profile.getUserId());
-                label.setBorder(new EmptyBorder(9, 10, 9, 10));
-                return label;
-            }
-        });
+        styleMatches(matches);
         conversation.setName("conversation");
         conversation.setBackground(BACKGROUND);
         conversation.setForeground(INK);
@@ -165,17 +139,6 @@ public class SpotterSwingView extends SpotterView
         conversation.setWrapStyleWord(true);
         conversation.setFont(new Font("SansSerif", Font.PLAIN, 15));
         conversation.setMargin(new Insets(12, 12, 12, 12));
-        JTabbedPane activities = new JTabbedPane();
-        activities.addTab("Messages", new JScrollPane(conversation));
-        activities.addTab("Shared workout", workoutPanel());
-        JSplitPane chats = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-            new JScrollPane(matches), activities);
-        chats.setDividerLocation(140);
-        chats.setResizeWeight(0.35);
-        chats.setBorder(BorderFactory.createLineBorder(SURFACE));
-        chats.setBackground(SURFACE);
-        chats.setUI(new javax.swing.plaf.basic.BasicSplitPaneUI());
-        inbox.add(chats, BorderLayout.CENTER);
         JPanel compose = new JPanel(new BorderLayout(8, 0));
         compose.setOpaque(false);
         message.setName("message");
@@ -188,14 +151,43 @@ public class SpotterSwingView extends SpotterView
             new EmptyBorder(8, 10, 8, 10)));
         compose.add(message, BorderLayout.CENTER);
         compose.add(send, BorderLayout.EAST);
-        inbox.add(compose, BorderLayout.SOUTH);
-        activities.addChangeListener(event -> compose.setVisible(activities.getSelectedIndex() == 0));
+        JPanel messages = new JPanel(new BorderLayout(0, 10));
+        messages.setOpaque(false);
+        messages.add(new JScrollPane(conversation), BorderLayout.CENTER);
+        messages.add(compose, BorderLayout.SOUTH);
 
-        JPanel body = new JPanel(new BorderLayout(24, 0));
-        body.setOpaque(false);
-        body.add(card, BorderLayout.CENTER);
-        body.add(inbox, BorderLayout.EAST);
-        panel.add(body, BorderLayout.CENTER);
+        JTabbedPane sections = new JTabbedPane();
+        sections.setName("sections");
+        sections.setUI(new javax.swing.plaf.basic.BasicTabbedPaneUI()
+        {
+            @Override
+            protected void paintTabBackground(Graphics graphics, int placement, int index,
+                int x, int y, int width, int height, boolean selected)
+            {
+                graphics.setColor(selected ? new Color(30, 75, 46) : SURFACE);
+                graphics.fillRect(x, y, width, height);
+            }
+        });
+        sections.setBackground(BACKGROUND);
+        sections.setForeground(INK);
+        sections.setFont(new Font("SansSerif", Font.BOLD, 15));
+        JPanel sidebar = matchSidebar(matches);
+        JPanel messagesWorkspace = matchWorkspace(messages);
+        JPanel workoutWorkspace = matchWorkspace(workoutPanel());
+        messagesWorkspace.add(sidebar, BorderLayout.WEST);
+        sections.addTab("Discovery", card);
+        sections.addTab("Messages", messagesWorkspace);
+        sections.addTab("Shared workout", workoutWorkspace);
+        sections.addChangeListener(event -> {
+            if (sections.getSelectedComponent() != card)
+            {
+                JPanel workspace = (JPanel)sections.getSelectedComponent();
+                workspace.add(sidebar, BorderLayout.WEST);
+                workspace.revalidate();
+                workspace.repaint();
+            }
+        });
+        panel.add(sections, BorderLayout.CENTER);
         status.setName("status");
         status.setBorder(new EmptyBorder(8, 0, 0, 0));
         panel.add(status, BorderLayout.SOUTH);
@@ -240,6 +232,53 @@ public class SpotterSwingView extends SpotterView
         chat.addMessageListener(messageListener);
     }
 
+    private static void styleMatches(JList<UserProfile> list)
+    {
+        list.setBackground(BACKGROUND);
+        list.setForeground(INK);
+        list.setSelectionBackground(new Color(30, 75, 46));
+        list.setSelectionForeground(ACCENT);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setCellRenderer(new DefaultListCellRenderer()
+        {
+            @Override
+            public Component getListCellRendererComponent(JList<?> list,
+                Object value, int index, boolean selected, boolean focus)
+            {
+                JLabel label = (JLabel)super.getListCellRendererComponent(
+                    list, value, index, selected, focus);
+                UserProfile profile = (UserProfile)value;
+                label.putClientProperty("html.disable", true);
+                label.setText(profile.getName() + "  /  " + profile.getUserId());
+                label.setBorder(new EmptyBorder(9, 10, 9, 10));
+                return label;
+            }
+        });
+    }
+
+    private static JPanel matchSidebar(JList<UserProfile> list)
+    {
+        JPanel sidebar = new JPanel(new BorderLayout(0, 10));
+        sidebar.setOpaque(false);
+        sidebar.setPreferredSize(new Dimension(180, 0));
+        JLabel title = new JLabel("Your matches");
+        title.setFont(new Font("SansSerif", Font.BOLD, 17));
+        title.setForeground(INK);
+        title.setLabelFor(list);
+        sidebar.add(title, BorderLayout.NORTH);
+        sidebar.add(new JScrollPane(list), BorderLayout.CENTER);
+        return sidebar;
+    }
+
+    private static JPanel matchWorkspace(JComponent content)
+    {
+        JPanel workspace = new JPanel(new BorderLayout(20, 0));
+        workspace.setBackground(SURFACE);
+        workspace.setBorder(new EmptyBorder(20, 20, 20, 20));
+        workspace.add(content, BorderLayout.CENTER);
+        return workspace;
+    }
+
     private JPanel workoutPanel()
     {
         workout.setName("workout");
@@ -248,29 +287,50 @@ public class SpotterSwingView extends SpotterView
         workout.setEditable(false);
         workout.setLineWrap(true);
         workout.setWrapStyleWord(true);
-        workout.setMargin(new Insets(8, 8, 8, 8));
+        workout.setFont(new Font("SansSerif", Font.PLAIN, 17));
+        workout.setMargin(new Insets(16, 16, 16, 16));
         workout.setText("Select a mutual match to see your workout.");
 
-        JPanel fields = new JPanel(new GridLayout(0, 2, 6, 4));
-        addExerciseField(fields, "Exercise", "exerciseName", exerciseName);
-        addExerciseField(fields, "Sets", "exerciseSets", exerciseSets);
-        addExerciseField(fields, "Reps", "exerciseReps", exerciseReps);
-        addExerciseField(fields, "Weight (lb)", "exerciseWeight", exerciseWeight);
-        addExercise.setName("addExercise");
-        fields.add(addExercise);
-        JPanel routine = new JPanel(new BorderLayout(0, 6));
+        JPanel counts = new JPanel(new GridLayout(1, 3, 12, 0));
+        counts.setOpaque(false);
+        counts.add(exerciseField("Sets", "exerciseSets", exerciseSets));
+        counts.add(exerciseField("Reps", "exerciseReps", exerciseReps));
+        counts.add(exerciseField("Weight (lb)", "exerciseWeight", exerciseWeight));
+        addExercise.setPreferredSize(new Dimension(156, 44));
+        JPanel action = new JPanel(new FlowLayout(FlowLayout.TRAILING, 0, 0));
+        action.setOpaque(false);
+        action.add(addExercise);
+
+        JPanel fields = new JPanel(new GridLayout(0, 1, 0, 8));
+        fields.setOpaque(false);
+        fields.add(exerciseField("Exercise", "exerciseName", exerciseName));
+        fields.add(counts);
+        fields.add(action);
+        JPanel routine = new JPanel(new BorderLayout(0, 16));
+        routine.setOpaque(false);
         routine.add(new JScrollPane(workout), BorderLayout.CENTER);
         routine.add(fields, BorderLayout.SOUTH);
         return routine;
     }
 
-    private static void addExerciseField(JPanel form, String text, String name, JTextField field)
+    private static JPanel exerciseField(String text, String name, JTextField field)
     {
         JLabel label = new JLabel(text);
+        label.setForeground(INK);
         label.setLabelFor(field);
         field.setName(name);
-        form.add(label);
-        form.add(field);
+        field.setBackground(BACKGROUND);
+        field.setForeground(INK);
+        field.setCaretColor(ACCENT);
+        field.setDisabledTextColor(MUTED);
+        field.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createLineBorder(new Color(49, 75, 59)),
+            new EmptyBorder(8, 10, 8, 10)));
+        JPanel group = new JPanel(new BorderLayout(0, 4));
+        group.setOpaque(false);
+        group.add(label, BorderLayout.NORTH);
+        group.add(field, BorderLayout.CENTER);
+        return group;
     }
 
     private void addExercise()

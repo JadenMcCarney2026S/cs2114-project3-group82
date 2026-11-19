@@ -30,6 +30,46 @@ class SpotterSwingViewTest
     }
 
     @Test
+    void testDiscoveryMessagesAndWorkoutUseSeparateTabs() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            SpotterSwingView view = new SpotterSwingView();
+            JTabbedPane sections = (JTabbedPane)find(view.getPanel(), "sections");
+            assertNotNull(sections);
+            assertEquals(3, sections.getTabCount());
+            assertEquals("Discovery", sections.getTitleAt(0));
+            assertEquals("Messages", sections.getTitleAt(1));
+            assertEquals("Shared workout", sections.getTitleAt(2));
+            assertNotNull(find((Container)sections.getComponentAt(0), "like"));
+            assertNotNull(find((Container)sections.getComponentAt(1), "conversation"));
+            Container messages = (Container)sections.getComponentAt(1);
+            Container routine = (Container)sections.getComponentAt(2);
+            Component matchList = find(messages, "matches");
+            assertNotNull(matchList);
+            sections.setSelectedIndex(2);
+            assertSame(matchList, find(routine, "matches"));
+            view.getPanel().setSize(view.getPanel().getPreferredSize());
+            layout(view.getPanel());
+            assertTrue(find(routine, "workout").getWidth() >= 600);
+            sections.setSelectedIndex(1);
+            assertSame(matchList, find(messages, "matches"));
+            view.close();
+        });
+    }
+
+    private static void layout(Container parent)
+    {
+        parent.doLayout();
+        for (Component child : parent.getComponents())
+        {
+            if (child instanceof Container container)
+            {
+                layout(container);
+            }
+        }
+    }
+
+    @Test
     void testSharedWorkoutReflectsExerciseAcrossMatchedViews() throws Exception
     {
         SwingUtilities.invokeAndWait(() -> {
