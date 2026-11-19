@@ -10,12 +10,12 @@ import javax.swing.text.JTextComponent;
 /** Shared colors and controls for the Spotter LAN screens. */
 final class SpotterLanStyle
 {
-    static final Color BACKGROUND = new Color(16, 23, 22);
-    static final Color SURFACE = new Color(30, 42, 39);
-    static final Color INK = new Color(246, 250, 247);
-    static final Color MUTED = new Color(181, 202, 192);
-    static final Color ACCENT = new Color(200, 250, 99);
-    private static final Color OUTLINE = new Color(104, 133, 119);
+    static final Color BACKGROUND = new Color(245, 244, 237);
+    static final Color SURFACE = Color.WHITE;
+    static final Color INK = new Color(22, 35, 28);
+    static final Color MUTED = new Color(73, 94, 82);
+    static final Color ACCENT = new Color(212, 247, 112);
+    private static final Color OUTLINE = new Color(118, 135, 122);
 
     private SpotterLanStyle()
     {
@@ -34,12 +34,12 @@ final class SpotterLanStyle
         button.setUI(new BasicButtonUI());
         button.setOpaque(true);
         button.setBackground(primary ? ACCENT : SURFACE);
-        button.setForeground(primary ? BACKGROUND : INK);
+        button.setForeground(INK);
         button.setFont(button.getFont().deriveFont(Font.BOLD));
         button.addChangeListener(event -> {
             boolean enabled = button.isEnabled();
             button.setBackground(!enabled || !primary ? SURFACE : ACCENT);
-            button.setForeground(!enabled ? MUTED : primary ? BACKGROUND : INK);
+            button.setForeground(enabled ? INK : MUTED);
         });
         button.setBorder(buttonBorder(false, primary));
         button.addFocusListener(new java.awt.event.FocusAdapter()
@@ -69,10 +69,10 @@ final class SpotterLanStyle
     {
         input.setBackground(SURFACE);
         input.setForeground(INK);
-        input.setCaretColor(ACCENT);
+        input.setCaretColor(INK);
         input.setDisabledTextColor(MUTED);
         input.setSelectionColor(ACCENT);
-        input.setSelectedTextColor(BACKGROUND);
+        input.setSelectedTextColor(INK);
         input.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createLineBorder(OUTLINE),
             BorderFactory.createEmptyBorder(7, 9, 7, 9)));
@@ -90,7 +90,7 @@ final class SpotterLanStyle
         panel.setBackground(BACKGROUND);
         panel.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
         panel.add(alertText(detail, INK), java.awt.BorderLayout.CENTER);
-        panel.add(alertText(guidance, ACCENT), java.awt.BorderLayout.SOUTH);
+        panel.add(alertText(guidance, MUTED), java.awt.BorderLayout.SOUTH);
         return panel;
     }
 

@@ -1,6 +1,12 @@
 package spotter;
 
 import java.awt.BorderLayout;
+import java.awt.BasicStroke;
+import java.awt.Color;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.RenderingHints;
@@ -62,27 +68,49 @@ final class SpotterLanOnboarding
     private void showLogin()
     {
         JPanel form = form();
-        addField(form, "Server URL", address);
         addField(form, "Username", username);
         addField(form, "Password", password);
+        JPanel network = form();
+        addField(network, "Server URL", address);
+        network.setVisible(false);
+        JToggleButton settings = new JToggleButton("Connection settings");
+        settings.setHorizontalAlignment(SwingConstants.LEADING);
+        settings.addActionListener(event -> {
+            network.setVisible(settings.isSelected());
+            window.pack();
+            if (settings.isSelected())
+            {
+                address.requestFocusInWindow();
+            }
+        });
         JPanel actions = actions();
         JLabel requirements = new JLabel("<html>New accounts need a username of 3–32 letters, digits,"
             + " or underscores<br>and a password of 12–128 characters.</html>");
         requirements.setForeground(SpotterLanStyle.MUTED);
         requirements.setBorder(BorderFactory.createEmptyBorder(6, 0, 0, 0));
-        form.add(requirements);
         JButton login = new JButton("Log in");
         JButton signUp = new JButton("Sign up");
         SpotterLanStyle.button(login, true);
         SpotterLanStyle.button(signUp, false);
         actions.add(signUp);
         actions.add(login);
-        login.addActionListener(event -> authenticate(false, login, signUp));
-        signUp.addActionListener(event -> authenticate(true, login, signUp));
-        show("Find your training partner", form, actions, login);
+        login.addActionListener(event -> authenticate(false, login, signUp, settings));
+        signUp.addActionListener(event -> authenticate(true, login, signUp, settings));
+        JPanel access = new JPanel(new BorderLayout(0, 12));
+        access.setOpaque(false);
+        access.add(form, BorderLayout.NORTH);
+        JPanel options = new JPanel();
+        options.setOpaque(false);
+        options.setLayout(new BoxLayout(options, BoxLayout.Y_AXIS));
+        options.add(requirements);
+        options.add(Box.createVerticalStrut(12));
+        options.add(settings);
+        options.add(network);
+        access.add(options, BorderLayout.CENTER);
+        show("Welcome to Spotter", access, actions, login);
     }
 
-    private void authenticate(boolean signUp, JButton login, JButton register)
+    private void authenticate(boolean signUp, JButton login, JButton register, JToggleButton settings)
     {
         SpotterLanClient client;
         try
@@ -94,6 +122,10 @@ final class SpotterLanOnboarding
         {
             showError("Check the server address", "The server URL is invalid.",
                 "Enter the HTTPS address provided by your host, ending in /chat.");
+            if (!settings.isSelected())
+            {
+                settings.doClick(0);
+            }
             address.requestFocusInWindow();
             return;
         }
@@ -313,26 +345,65 @@ final class SpotterLanOnboarding
 
     private void show(String title, JComponent fields, JComponent actions, JButton submit)
     {
-        JPanel body = new JPanel(new BorderLayout(0, 18));
-        body.setBackground(SpotterLanStyle.BACKGROUND);
-        body.setBorder(BorderFactory.createEmptyBorder(22, 26, 22, 26));
-        JPanel header = new JPanel(new GridLayout(0, 1, 0, 4));
-        header.setOpaque(false);
-        JLabel brand = new JLabel("SPOTTER");
-        brand.setForeground(SpotterLanStyle.ACCENT);
-        brand.setFont(brand.getFont().deriveFont(java.awt.Font.BOLD, 13f));
-        header.add(brand);
-        header.add(SpotterLanStyle.heading(title));
-        body.add(header, BorderLayout.NORTH);
-        body.add(fields, BorderLayout.CENTER);
+        JPanel body = new JPanel(new BorderLayout());
+        body.add(trackPanel(), BorderLayout.WEST);
+        JPanel card = new JPanel(new BorderLayout(0, 22));
+        card.setBackground(SpotterLanStyle.SURFACE);
+        card.setBorder(BorderFactory.createEmptyBorder(32, 32, 24, 32));
+        card.add(SpotterLanStyle.heading(title), BorderLayout.NORTH);
+        card.add(fields, BorderLayout.CENTER);
         JPanel footer = new JPanel(new BorderLayout(0, 8));
         footer.setOpaque(false);
         footer.add(actions, BorderLayout.NORTH);
         footer.add(status, BorderLayout.SOUTH);
-        body.add(footer, BorderLayout.SOUTH);
+        card.add(footer, BorderLayout.SOUTH);
+        body.add(card, BorderLayout.CENTER);
         window.setContentPane(body);
         window.getRootPane().setDefaultButton(submit);
         window.pack();
+    }
+
+    private static JPanel trackPanel()
+    {
+        JPanel panel = new JPanel(new BorderLayout())
+        {
+            @Override
+            protected void paintComponent(Graphics graphics)
+            {
+                super.paintComponent(graphics);
+                Graphics2D track = (Graphics2D)graphics.create();
+                try
+                {
+                    track.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+                    track.setColor(new Color(162, 205, 68));
+                    track.setStroke(new BasicStroke(2f));
+                    for (int lane = 0; lane < 7; lane++)
+                    {
+                        int offset = lane * 19;
+                        track.drawRoundRect(72 - offset, getHeight() - 216 - offset,
+                            340 + offset * 2, 475 + offset * 2, 230 + offset * 2,
+                            230 + offset * 2);
+                    }
+                }
+                finally
+                {
+                    track.dispose();
+                }
+            }
+        };
+        panel.setPreferredSize(new Dimension(258, 410));
+        panel.setBackground(SpotterLanStyle.ACCENT);
+        panel.setBorder(BorderFactory.createEmptyBorder(26, 26, 24, 20));
+        JLabel brand = new JLabel("SPOTTER");
+        brand.setForeground(SpotterLanStyle.INK);
+        brand.setFont(brand.getFont().deriveFont(Font.BOLD | Font.ITALIC, 19f));
+        panel.add(brand, BorderLayout.NORTH);
+        JLabel headline = new JLabel("<html>Find your<br>training partner.</html>");
+        headline.setForeground(SpotterLanStyle.INK);
+        headline.setFont(headline.getFont().deriveFont(Font.BOLD, 34f));
+        panel.add(headline, BorderLayout.CENTER);
+        return panel;
     }
 
     private static JPanel form()

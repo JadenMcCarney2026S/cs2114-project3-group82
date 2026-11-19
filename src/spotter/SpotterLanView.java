@@ -20,6 +20,7 @@ import static spotter.SpotterLanStyle.*;
 public final class SpotterLanView
 {
     private static final int HISTORY_LIMIT = 100;
+    private static final int PROFILE_PHOTO_EDGE = 360;
 
     private record Action(String name, int peer, String text, String requestId)
     {
@@ -96,9 +97,9 @@ public final class SpotterLanView
     private final URI server;
     private final Map<Integer, String> names = new HashMap<>();
     private final JFrame window = new JFrame("Spotter");
-    private final JLabel candidate = new JLabel("Connecting…");
+    private final JLabel candidate = heading("Connecting…");
     private final JLabel candidatePhoto = new JLabel("", SwingConstants.CENTER);
-    private final JTextArea candidateDetails = new JTextArea(5, 24);
+    private final JTextArea candidateDetails = new JTextArea(3, 34);
     private final JButton pass = new JButton("Pass");
     private final JButton like = new JButton("Like");
     private final JButton logout = new JButton("Log out");
@@ -123,18 +124,22 @@ public final class SpotterLanView
     {
         this.server = server;
         this.client = client;
-        JPanel chat = conversationPanel();
-        JPanel content = new JPanel(new BorderLayout(16, 16));
+        JPanel content = new JPanel(new BorderLayout(0, 14));
         content.setBackground(BACKGROUND);
         content.setBorder(BorderFactory.createEmptyBorder(20, 24, 24, 24));
         JPanel header = new JPanel(new BorderLayout());
         header.setOpaque(false);
-        header.add(heading("SPOTTER"), BorderLayout.WEST);
+        header.add(heading("Spotter"), BorderLayout.WEST);
         button(logout, false);
         header.add(logout, BorderLayout.EAST);
         content.add(header, BorderLayout.NORTH);
-        content.add(discoveryPanel(), BorderLayout.WEST);
-        content.add(chat, BorderLayout.CENTER);
+        JTabbedPane sections = new JTabbedPane();
+        sections.addTab("Discover", discoveryPanel());
+        sections.addTab("Messages", conversationPanel());
+        content.add(sections, BorderLayout.CENTER);
+        status.putClientProperty("html.disable", true);
+        status.setForeground(MUTED);
+        content.add(status, BorderLayout.SOUTH);
         window.setContentPane(content);
 
         logout.addActionListener(event -> signOut());
@@ -169,11 +174,10 @@ public final class SpotterLanView
         matchPicker.setOpaque(false);
         matchPicker.add(matchLabel);
         matchPicker.add(matches);
-        JLabel chatHeading = heading("Messages");
         JPanel chatHeader = new JPanel(new BorderLayout(8, 0));
         chatHeader.setOpaque(false);
-        chatHeader.add(chatHeading, BorderLayout.WEST);
-        chatHeader.add(matchPicker, BorderLayout.EAST);
+        chatHeader.add(heading("Your matches"), BorderLayout.WEST);
+        chatHeader.add(matchPicker, BorderLayout.CENTER);
         DefaultListCellRenderer renderer = new DefaultListCellRenderer();
         renderer.putClientProperty("html.disable", true);
         matches.setRenderer((list, id, index, selected, focus) ->
@@ -190,9 +194,6 @@ public final class SpotterLanView
         composer.setOpaque(false);
         composer.add(message, BorderLayout.CENTER);
         composer.add(send, BorderLayout.EAST);
-        composer.add(status, BorderLayout.SOUTH);
-        status.putClientProperty("html.disable", true);
-        status.setForeground(MUTED);
 
         JPanel chat = new JPanel(new BorderLayout(0, 12));
         chat.setBackground(SURFACE);
@@ -209,14 +210,10 @@ public final class SpotterLanView
     {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setBackground(SURFACE);
-        panel.setBorder(BorderFactory.createEmptyBorder(14, 16, 14, 16));
-        JPanel title = new JPanel(new GridLayout(0, 1));
-        title.setOpaque(false);
-        title.add(heading("Discover"));
+        panel.setBorder(BorderFactory.createEmptyBorder(16, 18, 18, 18));
         candidate.setForeground(INK);
         candidate.putClientProperty("html.disable", true);
-        title.add(candidate);
-        candidatePhoto.setPreferredSize(new java.awt.Dimension(240, 240));
+        candidatePhoto.setPreferredSize(new java.awt.Dimension(400, PROFILE_PHOTO_EDGE));
         candidatePhoto.setBackground(BACKGROUND);
         candidatePhoto.setForeground(MUTED);
         candidatePhoto.setOpaque(true);
@@ -224,7 +221,9 @@ public final class SpotterLanView
         candidateDetails.setEditable(false);
         candidateDetails.setLineWrap(true);
         candidateDetails.setWrapStyleWord(true);
-        input(candidateDetails);
+        candidateDetails.setBackground(SURFACE);
+        candidateDetails.setForeground(INK);
+        candidateDetails.setBorder(BorderFactory.createEmptyBorder());
         candidateDetails.getAccessibleContext().setAccessibleName("Candidate profile details");
         JPanel buttons = new JPanel(new GridLayout(1, 2, 8, 0));
         buttons.setOpaque(false);
@@ -234,11 +233,11 @@ public final class SpotterLanView
         buttons.add(like);
         JPanel footer = new JPanel(new BorderLayout(0, 8));
         footer.setOpaque(false);
+        footer.add(candidate, BorderLayout.NORTH);
         JScrollPane details = new JScrollPane(candidateDetails);
         details.setBorder(BorderFactory.createEmptyBorder());
         footer.add(details, BorderLayout.CENTER);
         footer.add(buttons, BorderLayout.SOUTH);
-        panel.add(title, BorderLayout.NORTH);
         panel.add(candidatePhoto, BorderLayout.CENTER);
         panel.add(footer, BorderLayout.SOUTH);
         return panel;
@@ -433,7 +432,7 @@ public final class SpotterLanView
             var decoded = ImageIO.read(new ByteArrayInputStream(profile.photo()));
             if (decoded != null)
             {
-                image = SpotterLanOnboarding.preview(decoded, 240);
+                image = SpotterLanOnboarding.preview(decoded, PROFILE_PHOTO_EDGE);
             }
         }
         catch (IOException invalidImage)
@@ -526,7 +525,8 @@ public final class SpotterLanView
     {
         displayedCandidate = card;
         candidatePhoto.setIcon(card == null ? null : card.photo());
-        candidatePhoto.setText(card != null && card.photo() == null ? "Photo unavailable" : "");
+        candidatePhoto.setText(card != null && card.photo() != null ? "" : candidateId == 0
+            ? "New training partners will appear here" : "Photo unavailable");
         if (card == null)
         {
             candidate.setText(candidateId == 0 ? "No eligible profiles yet" : "Profile temporarily unavailable");
@@ -609,7 +609,8 @@ public final class SpotterLanView
             }
         }
         cursor = snapshot.next();
-        String display = String.join("\n", displayedHistory);
+        String display = openPeer == 0 ? "Match with a training partner to start a conversation."
+            : String.join("\n", displayedHistory);
         if (!history.getText().equals(display))
         {
             history.setText(display);
