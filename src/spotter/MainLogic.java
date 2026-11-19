@@ -11,6 +11,7 @@ public class MainLogic
     private final ProfileManager profileManager;
     private final MatchManager matchManager;
     private final ChatManager chatManager;
+    private final WorkoutManager workoutManager;
     private final Map<Integer, UserProfile> profiles = new LinkedHashMap<>();
 
     public MainLogic(UserProfile currentUser)
@@ -29,6 +30,7 @@ public class MainLogic
         this.currentUser = currentUser;
         this.chatManager = chatManager;
         matchManager = chatManager.getMatchManager();
+        workoutManager = new WorkoutManager();
     }
 
     UserProfile getCurrentUser()
@@ -39,6 +41,46 @@ public class MainLogic
     ChatManager getChatManager()
     {
         return chatManager;
+    }
+    
+    public boolean createWorkout(String workoutName)
+    {
+        try
+        {
+            Workout workout = new Workout(workoutName);
+            workoutManager.addWorkout(currentUser.getUserId(), workout);
+            return true;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
+    }
+    
+    public Workout getWorkout()
+    {
+        return workoutManager.getWorkout(currentUser.getUserId());
+    }
+    
+
+    public boolean addExercise(String exercise)
+    {
+        Workout workout = getWorkout();
+    
+        if (workout == null)
+        {
+            return false;
+        }
+    
+        try
+        {
+            workout.addExercise(exercise);
+            return true;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
     }
 
     public boolean addProfile(UserProfile profile)
