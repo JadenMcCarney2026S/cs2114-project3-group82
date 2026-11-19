@@ -154,7 +154,47 @@ without a photo use their initial.
 SpotterApp.createSessions is shared by console and desktop launchers; each new
 launch starts fresh in-memory state. The original console remains available.
 
-### Chat from multiple computers on the same Wi-Fi
+### Run the Swing app with Docker
+
+Install and start Docker Desktop or Docker Engine with Compose. The computer
+displaying Swing also needs JDK 17. From the project folder on macOS or Linux,
+run:
+
+```sh
+sh scripts/spotter-docker.sh
+```
+
+The launcher builds and starts the server, trusts its generated TLS
+certificate for this client, and opens Swing with the server address filled
+in. Choose **Sign up** or **Log in**. Run the same launcher in another terminal
+to open a second Swing client against the same server.
+
+By default, the Docker server is reachable only from this computer at
+`https://127.0.0.1:8443/chat`. Accounts and photos stay in the
+`spotter-data` Docker volume. Use `docker compose down` to stop the server
+and keep the volume. Accounts from the manual server use a separate data file.
+
+To accept Swing clients from another computer on the same Wi-Fi, start the
+host with its Wi-Fi IPv4 address and export its public certificate. Replace the
+example IP with the host's actual address:
+
+```sh
+export SPOTTER_LAN_IP=192.168.1.10
+sh scripts/spotter-docker.sh
+```
+
+In another terminal on the host, run `docker compose cp server:/data/server.crt ./spotter-docker.crt`.
+Share the public certificate with participants through a trusted channel.
+Each participant runs the following from their project folder using JDK 17:
+
+```sh
+sh scripts/spotter-docker.sh https://192.168.1.10:8443/chat /path/to/spotter-docker.crt
+```
+
+Only the host needs Docker. Each client uses the public certificate for the
+duration of its Swing session.
+
+### Run the Wi-Fi server manually
 
 Compile the Java 17 production sources using the console instructions above
 on each computer. On the host, find its Wi-Fi IPv4 address. Generate a TLS

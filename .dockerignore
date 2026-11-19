@@ -1,0 +1,7 @@
+**
+!Dockerfile
+!src/
+!src/spotter/
+!src/spotter/*.java
+!scripts/
+!scripts/spotter-server.sh

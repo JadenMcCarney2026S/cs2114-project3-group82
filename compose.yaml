@@ -1,0 +1,12 @@
+services:
+  server:
+    build: .
+    ports:
+      - "${SPOTTER_LAN_IP:-127.0.0.1}:8443:8080"
+    environment:
+      SPOTTER_LAN_IP: "${SPOTTER_LAN_IP:-127.0.0.1}"
+    volumes:
+      - spotter-data:/data
+
+volumes:
+  spotter-data:

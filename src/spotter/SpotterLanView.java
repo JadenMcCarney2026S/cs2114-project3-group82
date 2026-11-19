@@ -619,7 +619,8 @@ public final class SpotterLanView
 
     public static void main(String[] args)
     {
-        SwingUtilities.invokeLater(() -> new SpotterLanOnboarding(null,
+        URI server = args.length == 0 ? null : URI.create(args[0]);
+        SwingUtilities.invokeLater(() -> new SpotterLanOnboarding(server,
             "Log in or create an account.", SpotterLanView::new));
     }
 }
