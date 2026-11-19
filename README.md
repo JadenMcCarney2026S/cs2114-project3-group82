@@ -50,7 +50,7 @@ java -jar "$JUNIT" execute --class-path "$MODEL_OUT" \
 
 This compilation excludes every View, Controller, launcher, and UI test file,
 including the separately merged ProfileView, MatchesView, and ChatView.
-The D4 verification run passed 44 independent model tests and 89 tests in the
+The D4 verification run passed 44 independent model tests and 90 tests in the
 full desktop and HTTPS suite. The console guided demo was also run through
 completion with the shared-workout steps.
 
@@ -145,6 +145,22 @@ quit
 Alice's first like creates no match. Bob's reciprocal like creates the match;
 both users can then see the same conversation. Carol cannot see their messages.
 
+#### Review the D4 console prototype
+
+Start a fresh `SpotterApp` using the build command above. Enter each row's
+commands one at a time and compare the result with the last column.
+
+| Check | Commands | Expected result |
+| --- | --- | --- |
+| Queue and one-sided Like | `profile`, `right`, `matches` | Alice first sees Bob. After the Like, Carol is next and the match list is empty. |
+| Mutual match | `user 2`, `right`, `matches`, `workout 1` | Bob matches Alice. Their new routine has no exercises. |
+| Shared routine and order | `exercise 1 3 12 0 Push ups`, `exercise 1 3 8 25 Dumbbell press`, `user 1`, `workout 2` | Alice sees Bob's two exercises in the order entered, including 0 lb for bodyweight. |
+| Invalid input | `exercise 2 0 8 25 Invalid`, `workout 2` | The error explains the input rules. Both valid exercises remain in the same order. |
+| Access control | `user 3`, `workout 1`, `exercise 1 3 8 0 Push ups` | Carol sees no accessible exercises and her attempt to add one is rejected. |
+
+Type `quit` to exit. Restart the app to review from the original sample
+profiles. For the timed presentation, see [Three-minute demo](#three-minute-demo).
+
 ### Desktop card-and-chat demo
 
 An optional Java Swing View keeps the same Queue, matching, and messaging
@@ -161,6 +177,10 @@ window for Alice and one for Bob. In **Discovery**, like Bob in Alice's
 window and like Alice in Bob's window. Open **Messages**, select the resulting
 match in both windows, then send a message from either window. The message
 appears in both conversations automatically.
+**Like** and **Pass** briefly cover the profile card with **LIKED!** or
+**PASSED…**. The panel slides away to reveal the next profile. Add
+`-Dspotter.reduceMotion=true` before `-cp` in the Swing launch command to
+keep the feedback stationary.
 Switching either window to Carol clears the open conversation. Both windows
 share the same in-memory demo state within one Java process.
 Open **Shared workout** to use the full-width routine panel. Choose a mutual
@@ -492,8 +512,8 @@ file's row.
 | SpotterView.java | David (Codex-assisted): implemented console View and compatibility methods for Varooni's formatter/input APIs; exercised integration tests/process runs. Codex assisted with workout output and command documentation. |
 | SpotterController.java | David (Codex-assisted): generated command routing/parsing; corrected map null check after failing tests; executed integration checks. Jaden: manually tested mutual matching, messaging/replies, and account isolation (team-confirmed). Codex assisted with workout command routing, validation, and shared manager wiring. |
 | SpotterApp.java | David (Codex-assisted): generated demo wiring; executed separate console processes. Codex assisted with wiring the shared workout manager into the demo. |
-| SpotterSwingView.java | David (Codex-assisted): implemented Swing card/chat View and automated rendering/button checks. David: manually confirmed local launch and Bob-to-Carol card/photo advancement. Jaden: manually tested match selection, messaging/replies, account switching, and Carol conversation isolation (team-confirmed). Codex assisted with the D4 workout display and input. |
-| SpotterSwingViewTest.java | David (Codex-assisted): generated and executed 4 desktop interaction tests, including creating a profile and matching/messaging with an existing account. Codex assisted with the workout interaction test. |
+| SpotterSwingView.java | David (Codex-assisted): directed the card and chat work, shared-workout screen, tab layout, profile redesign, swipe transitions, and sender-name display. Codex implemented the changes and checked rendering. David manually confirmed the earlier local launch and Bob-to-Carol photo advancement. Jaden manually tested match selection, messaging and replies, account switching, and Carol's conversation isolation (team-confirmed). |
+| SpotterSwingViewTest.java | David (Codex-assisted): directed coverage for profile creation, matching and chat, shared workouts, tab layout, swipe feedback, and sender names. Codex wrote or revised the tests and ran the automated checks. |
 | SpotterControllerTest.java | David (Codex-assisted): generated and executed 3 integration tests. Codex assisted with the workout command integration test. |
 | ProfileView.java | Varooni: authored (team-confirmed). David (Codex-assisted): integrated existing formatter API. |
 | MatchesView.java | Varooni: authored (team-confirmed). David (Codex-assisted): integrated existing formatter API. |
@@ -527,6 +547,34 @@ The .classpath and README updates were also Codex-assisted. A pre-existing
 separate from completed contributions.
 
 ## GenAI usage note
+
+### November 19, 2026 session — David Moon
+
+David used Codex to evaluate Spotter against the D4 rubric, prioritize work,
+direct implementation and UI revisions, and prepare the console review and
+presentation. Codex drafted and revised code and tests, built and ran the
+prototype, checked Swing renders, and committed and pushed the stages David
+authorized. Earlier human contributions and manual checks appear in the
+attribution table above.
+
+The session started at D3 commit `6c8df24`. Commit `b77c2de` was the last
+pushed checkpoint before the final Swing edits.
+
+| Area | Before the session | Changes made with Codex |
+| --- | --- | --- |
+| D4 and model tests | Shared workouts were a proposal. Queue tests covered basic FIFO and reusing a drained queue. | Implemented ordered, match-only workouts in the console and local Swing. Added interleaved FIFO, workout access and validation, and controller tests. Updated the Reflection, review guide, and three-minute demo. |
+| Accounts and chat | The local demo switched between identities and reopened stored chats. | Added live desktop chat, HTTPS Wi-Fi chat, account and photo onboarding, Docker startup, and an Android client for the same server. |
+| Swing presentation | Discovery and chat shared a window layout. By `b77c2de`, Discovery, Messages, and Shared workout had separate tabs. | Later edits added larger profile photos and bios, full-card **LIKED!** and **PASSED…** transitions that block accidental extra swipes, and sender names in Messages. |
+
+Codex observed 44 independent model tests passing and 90 tests passing in
+the full suite after the swipe transitions. After the sender-name change,
+all 22 Swing and MainLogic tests passed, and the final full-suite run passed
+all 90 tests. Codex exercised the console review
+steps, rendered Swing previews, packaged the Android APK, and checked the
+mobile HTTPS protocol. Android emulator and Docker container runs were
+unverified on this Mac.
+
+### Earlier GenAI-assisted work
 
 The supplied specification reports ChatGPT assistance with MVC design, method
 signatures, data/state, validation, testing, and scope clarification. That is
