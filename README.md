@@ -230,116 +230,79 @@ the named cases, not exhaustive input coverage or authenticated user security.
 
 ## Reflection
 
-### Specification, implementation, and reasons for changes
+### How did your design absorb the change?
 
-| Specification / starting point | What was built and why | Evidence or triggering problem |
-| --- | --- | --- |
-| A singly linked FIFO queue independent of the View. | Reused `LinkedQueue` unchanged; added populated-null and drain/refill tests. | Inspection found correct queue code but no explicit drain/refill or populated-null regression test. Both new tests passed. |
-| JUnit assertions exercise the model. | Added Eclipse's JUnit 5 container to `.classpath`. | Baseline compilation without JUnit failed with unresolved Jupiter imports. Supplying cached JUnit compiled successfully and ran all 15 original tests. |
-| Profile eligibility and duplicate prevention belong in the model. | Reused `ProfileManager`; changed `addProfile` from void to boolean so MainLogic can know whether it queued a candidate without duplicating filtering. Null still throws here; MainLogic rejects null with false. | Integration needed an acceptance result. Existing statement-style callers still compile; tests now assert acceptance and rejection. |
-| MainLogic coordinates swipes, mutual matching, and messaging. | Added the previously absent MainLogic, MatchManager, ChatManager, Message, and SwipeAction. Users share one ChatManager and its MatchManager. | The initial checkout contained only the profile/queue model. Two isolated per-user stores could not see reciprocal likes. Tests now create matches through actual swipes from two users. |
-| Messaging signatures use String IDs, while profile IDs and swipe maps use integers. | Messaging APIs use integer IDs consistently. | Inspection exposed conflicting ID types; no existing messaging callers needed migration. |
-| A swipe returns a newly matched profile or null. | Preserved this contract. Null can mean a valid nonmatching swipe, invalid action, or empty queue. The Controller checks action/queue before displaying an outcome. | Specification review showed null cannot be treated as a general swipe-success flag. Null-action, left-swipe, and empty-queue tests cover the separate cases. |
-| Conversations are available only to matches. | Model authorization checks reciprocal likes. Unauthorized reads return an empty list; results are copies. Messages include sender, content, and timestamp; console history displays sender and text. | Tests show unmatched writes store nothing and an outsider cannot read an existing private conversation. |
-| SpotterView coordinates separate profile, match, and chat View classes; Controller takes one model and View. | Initially built one thin console View and later a Swing View. Varooni's three formatting Views were then merged and made available through SpotterView compatibility APIs. Controller accepts existing sessions, an active ID, and a View. | No View was present in the initial checkout. The later merge produced 15 test compilation errors due to differing APIs; compatibility methods fixed the mismatch and JUnit annotations enabled the 25 teammate tests. |
-| Console input should not crash the MVP. | Controller parses commands and integer IDs; model still enforces business rules. | The first Controller test run failed 3/3 because `Map.of(...).containsValue(null)` throws. Replaced that null check; all 3 tests then passed. Process checks also exercised bad input and EOF. |
+Our MVC design made it easier to add workout functionality without affecting 
+existing matching and messaging features. As predicted in D3, we created 
+Workout and WorkoutManager and modified MainLogic, SpotterController, and
+SpotterView. We also added WorkoutTest and WorkoutManagerTest and expanded our
+existing tests. The existing structure allowed us to integrate the feature
+without major changes to other classes. 
 
-The workout-experience map, FIFO filtering, and duplicate prevention already
-appear in the supplied specification. They are not new specification changes.
-The initial profile model implements the specification's later data/state
-section, not its earlier, broader list of gender, location, and workout fields.
+### Did the change cross the model/view line?
 
-### Independence and unknowns
+The workout feature required changes to the model, controller, and view, but 
+maintained MVC separation. Workout and WorkoutManager handle workout data, 
+MainLogic coordinates the functionality, and SpotterController processes user 
+commands. We updated the console menu in SpotterView and reused its existing 
+display methods. We are also developing WorkoutView and dedicated showWorkout() 
+methods for SpotterView and SpotterSwingView to improve workout display.
 
-The model imports no View or Controller code. The 33 model tests compile and
-execute with Spotter*, ProfileView*, MatchesView*, and ChatView* excluded. Input parsing belongs to the
-Controller; queue rules, eligibility, swipe history, matching, and conversation
-authorization remain in the model. No model rule had to move into the View.
+### What changed from your D3 plan?
 
-Resolved technical questions include FIFO profile consumption, preventing
-previously swiped IDs from reappearing, sharing reciprocal-like state, and
-restricting stored conversations to matches. These are supported by executed
-tests, not seeded matches. Session switching in the console keeps the existing
-MainLogic instances rather than rebuilding them.
+Our original D3 plan proposed shared workouts containing exercises, sets,
+repetitions, and weights. For this prototype, we implemented individual workout
+creation, exercise management, and workout viewing using three console
+commands: createworkout, addexercise, and workout. We also added input
+validation and additional JUnit tests. We are continuing to develop shared
+workout functionality as part of our final implementation. 
 
-Still unresolved: rebuilding a user's MainLogic with shared managers preserves
-swipe/conversation state but does not restore its local profile catalog or
-matched-profile list. `refreshProfileQueue()` and a profile repository are
-absent. State is not persisted; identity is supplied by the local demo rather
-than authentication. Shared workouts are not implemented. The complete original
-scope document was not supplied, so its full original unknown list remains
-unconfirmed; the supplied revised specification is the available reference.
+### What doesn't work yet?
 
-### Unfinished work and test limits
+The workout feature currently supports individual routines but does not yet
+include sets, repetitions, weights, or workout sharing. Workouts are stored in
+memory and are not saved between sessions. We are currently working on shared
+workout functionality, dedicated workout views, an Android application, and
+live chatting. These features still need to be completed and tested. Our 
+current JUnit test suite passes, but further integration testing will be 
+necessary.
 
-The implemented console MVP path has been exercised. The desktop now creates profiles; console creation and profile editing remain
-absent. It does not provide persistent storage, authentication, location
-matching, workout history, or shared routines. ProfileView, MatchesView, and
-ChatView are now present after merging Varooni's work; their formatting APIs
-are available through compatibility methods in SpotterView. The current
-Controller and Swing flow retain their existing profile-based interfaces.
+### Next Steps
 
-No known executed test remains failing after the Controller correction.
-There are no dedicated Message, MatchManager, or ChatManager test
-files; MainLogic tests cover only some of their behavior. Constructor map-entry
-validation, timestamp behavior, and restoring
-matched-profile lists after rebuilding a session lack dedicated regression
-tests. Eclipse GUI execution and exhaustive input testing were not performed.
+### What is left for the final build?
 
-## Next Steps
+Our profile matching, messaging, and individual workout features are working
+and have passed our current JUnit tests. Our next priority is completing shared
+workout functionality and integrating the new workout views. We are also 
+implementing the Spotter application, including profile browsing, matching,
+and messaging, along with live chatting. Once these features are finished, we 
+will test their integration, fix remaining bugs, and prepare the final 
+demonstration. 
 
-### Remaining prototype work in implementation order
+### Stretch Goals
 
-The demonstrated fixed-session console flow works. The remaining work below
-addresses known gaps and final delivery; optional scope decisions should be
-confirmed before expanding the MVP. The team agreed on the assignments
-below. Future ownership does not imply that the work has already been completed.
+We are continuing to pursue shared workout routines, an Android application,
+and live chatting. We are dropping distance-based matchmaking and workout
+history so we can focus on completing our current features. 
 
-| Order | Task and expected methods/classes | Verification | Confirmed owner |
-| --- | --- | --- | --- |
-| 1 | Human review of the generated model/UI changes and completion of actual review/test attribution in this README. | Team can explain the queue, reciprocal match state, and access checks; verify attribution per file. | Jaden (integration lead); all members review their assigned areas |
-| 2 | Decide whether reconstructing a session is part of the required MVP; if so, restore known profiles/matches through MainLogic constructor/getMatches and shared profile storage, without requeueing swiped IDs. Define profile source before adding refreshProfileQueue. | A matched user rebuilt with shared state still lists the match and conversation; swiped/ineligible candidates remain excluded. | David (profile state); Gowri (match/access state); Jaden (integration) |
-| 3 | UserProfile constructor/edit regressions are now complete. Add Message timestamp tests and regression tests for any approved restoration change. | Valid inputs succeed; blank/null fields, invalid ages, duplicates, and unauthorized access preserve existing state. | David (model tests); Gowri (access tests) |
-| 4 | Final clean build, model-only tests, Controller tests, console smoke run, and Eclipse launch on the team's submission machine. Reconcile README with those results. | Document observed outcomes; resolve failures before submission. | Jaden (integration); Varooni (UI); David (model) |
+### 3 Minute Demo
 
-The confirmed D4 allocation is David for workout models/model tests, Gowri for
-matching/access integration, Varooni for Views/UI tests, and Jaden for Controller
-and integration verification. Confirmed planning is separate from actual file
-contributions recorded below.
+We will start by showing how users browse profiles, swipe right, and create
+mutual matches. Next, we will demonstrate messaging between matched users. We
+will then create a "Push Day" workout, add "Bench Press" and "Shoulder Press,"
+and display the exercises. If completed and tested, we will also demonstrate 
+shared workouts, the Android application, and live chatting. Finally, we will 
+briefly demonstrate input validation.
 
-### Proposed D4 change feature: shared workout routines
+## Who does what?
 
-Plan only: matched users can create and inspect a shared routine containing
-exercise names, sets, repetitions, and weights. This adds model state and
-validation and is reachable through Controller and View, rather than a cosmetic
-change. It was optional in the specification and is not part of this built MVP.
-
-| Layer | Expected change (proposed names, not existing APIs) | Confirmed owner |
-| --- | --- | --- |
-| Model | New Workout.addExercise and Workout.getExercises; a pair-keyed WorkoutManager for shared state/access; MainLogic.addWorkoutExercise and MainLogic.getWorkout to authorize and coordinate calls. | David (Workout/state); Gowri (matched-user authorization) |
-| Controller | SpotterController.handleCommand plus addWorkoutExercise/displayWorkout actions to parse exercise inputs and invoke MainLogic. | Jaden |
-| View | SpotterView.showWorkout and SpotterSwingView.showWorkout to display routine snapshots and validation feedback. | Varooni |
-| Wiring | SpotterApp.main to create and share workout state across existing user sessions. | Jaden |
-| Tests | New WorkoutTest/WorkoutManagerTest; extend MainLogicTest and SpotterControllerTest for the reachable shared-routine flow. | David (model); Gowri (access); Varooni (UI); Jaden (integration) |
-
-Expected to remain unchanged: LinkedQueue.enqueue/dequeue/peek/isEmpty/getSize,
-ProfileManager.addProfile/getNextProfile/removeNextProfile, UserProfile,
-Message, ChatManager.sendMessage/getConversation, and MatchManager's existing
-swipe/match rules. Workout authorization should reuse MatchManager.areMatched
-without changing matching behavior. This is a prediction to compare against the
-actual D4 diff, not a claim that those boundaries have been proved.
-
-Normal tests: a matched pair adds several exercises, retrieves them in order,
-and sees the same routine from both sessions; existing swipe and chat behavior
-still passes. Bad-input tests: empty/null names, nonpositive sets/repetitions,
-negative or nonfinite weights, malformed numeric console input, unmatched
-writes/reads, and attempted mutation of returned routine data. Rejected actions
-must leave the routine unchanged. Decide and document whether zero weight is
-allowed before implementing validation.
-
-The team plans to pursue shared workout routines and drop distance-based
-matchmaking and workout history for D4. Other original-scope stretch goals have
-not been independently identified. No D4 feature code was added in this step.
+Gowri is responsible for individual workout functionality, model and controller
+integration, and unit testing. Varooni is assigned to the workout views and
+interface testing. Our team is also working on shared workout functionality, 
+Android development, and live chatting. We will coordinate integration, 
+debugging, final testing, documentation, and the demonstration as a group. 
+The specific owners of the remaining features will be confirmed before 
+submission.
 
 ## Attribution
 
