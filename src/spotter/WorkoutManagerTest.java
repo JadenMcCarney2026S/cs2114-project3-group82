@@ -1,6 +1,7 @@
 package spotter;
 
 import static org.junit.jupiter.api.Assertions.*;
+
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
@@ -68,5 +69,63 @@ class WorkoutManagerTest
         assertTrue(workouts.getWorkout(1, 3).isEmpty());
         assertTrue(workouts.getWorkout(1, 1).isEmpty());
         assertFalse(workouts.addWorkoutExercise(1, 1, "Row", 3, 10, 15));
+    }
+
+    @Test
+    void testAddWorkout()
+    {
+        WorkoutManager manager = new WorkoutManager();
+        Workout workout = new Workout("Push Day");
+
+        manager.addWorkout(1, workout);
+        assertEquals(workout, manager.getWorkout(1));
+    }
+
+    @Test
+    void testAddWorkoutNull()
+    {
+        WorkoutManager manager = new WorkoutManager();
+
+        assertThrows(IllegalArgumentException.class, () -> {
+            manager.addWorkout(1, null);
+        });
+
+        assertNull(manager.getWorkout(1));
+    }
+
+    @Test
+    void testGetWorkoutNotFound()
+    {
+        WorkoutManager manager = new WorkoutManager();
+        assertNull(manager.getWorkout(99));
+    }
+
+    @Test
+    void testReplaceWorkout()
+    {
+        WorkoutManager manager = new WorkoutManager();
+
+        Workout first = new Workout("Push Day");
+        Workout second = new Workout("Leg Day");
+
+        manager.addWorkout(1, first);
+        manager.addWorkout(1, second);
+
+        assertEquals(second, manager.getWorkout(1));
+        assertEquals("Leg Day", manager.getWorkout(1).getWorkoutName());
+    }
+
+    @Test
+    void testMultipleUsers()
+    {
+        WorkoutManager manager = new WorkoutManager();
+
+        Workout first = new Workout("Push Day");
+        Workout second = new Workout("Leg Day");
+
+        manager.addWorkout(1, first);
+        manager.addWorkout(2, second);
+        assertSame(first, manager.getWorkout(1));
+        assertSame(second, manager.getWorkout(2));
     }
 }

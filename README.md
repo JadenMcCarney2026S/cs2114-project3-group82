@@ -106,6 +106,9 @@ in the Running users' candidate queues. Commands:
 | `matches` | List mutual matches for the active user. |
 | `send <id> <text>` | Send a nonempty message to a match. |
 | `chat <id>` | Display an authorized conversation. |
+| `createworkout <name>` | Create or replace your personal workout. |
+| `addexercise <name>` | Add an exercise to your personal workout. |
+| `workout` | View your personal workout. |
 | `workout <id>` | View a workout shared with a mutual match. |
 | `exercise <id> <sets> <reps> <weight> <name>` | Add an exercise to the shared workout. Enter zero weight for bodyweight exercises. |
 | `user <id>` | Switch between existing demo sessions. This is not login. |

@@ -19,7 +19,7 @@ public class MainLogic
         this(currentUser, new ChatManager(new MatchManager()));
     }
 
-    /** Pass the same ChatManager to user sessions to share matches and messages. */
+
     public MainLogic(UserProfile currentUser, ChatManager chatManager)
     {
         this(currentUser, chatManager, chatManager == null ? null
@@ -28,19 +28,24 @@ public class MainLogic
 
     MainLogic(UserProfile currentUser, ChatManager chatManager, WorkoutManager workoutManager)
     {
-        if (chatManager == null)
+        if (currentUser == null)
         {
-            throw new IllegalArgumentException("Chat manager cannot be null");
+            throw new IllegalArgumentException("Current user cannot be null");
         }
-        if (workoutManager == null || !workoutManager.uses(chatManager.getMatchManager()))
+        if (chatManager == null || workoutManager == null)
         {
-            throw new IllegalArgumentException("Workout and chat must use the same match manager");
+            throw new IllegalArgumentException("Managers cannot be null");
+        }
+        if (!workoutManager.uses(chatManager.getMatchManager()))
+        {
+            throw new IllegalArgumentException(
+                "Workout and chat must use the same match manager");
         }
         profileManager = new ProfileManager(currentUser);
         this.currentUser = currentUser;
         this.chatManager = chatManager;
-        this.workoutManager = workoutManager;
         matchManager = chatManager.getMatchManager();
+        this.workoutManager = workoutManager;
     }
 
     UserProfile getCurrentUser()
@@ -51,6 +56,46 @@ public class MainLogic
     ChatManager getChatManager()
     {
         return chatManager;
+    }
+
+    public boolean createWorkout(String workoutName)
+    {
+        try
+        {
+            Workout workout = new Workout(workoutName);
+            workoutManager.addWorkout(currentUser.getUserId(), workout);
+            return true;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
+    }
+
+    public Workout getWorkout()
+    {
+        return workoutManager.getWorkout(currentUser.getUserId());
+    }
+
+
+    public boolean addExercise(String exercise)
+    {
+        Workout workout = getWorkout();
+
+        if (workout == null)
+        {
+            return false;
+        }
+
+        try
+        {
+            workout.addExercise(exercise);
+            return true;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
     }
 
     WorkoutManager getWorkoutManager()

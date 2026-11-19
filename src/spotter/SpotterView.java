@@ -6,6 +6,7 @@ import java.util.List;
 /** Console formatting only; all actions go through the controller. */
 public class SpotterView
 {
+    private final WorkoutView workoutView = new WorkoutView();
     private final PrintStream output;
     private final java.util.Scanner input;
 
@@ -122,11 +123,14 @@ public class SpotterView
         showInfo("workout <id>      Read your shared workout");
         showInfo("exercise <id> <sets> <reps> <weight> <name>  Add an exercise");
         showInfo("user <id>         Switch demo user (not login)");
+        showInfo("createworkout <name>  Create a new workout");
+        showInfo("addexercise <name>   Add an exercise to your workout");
+        showInfo("workout              View your current workout");
         showInfo("help / quit       Show this menu / exit");
         showInfo("=======================================");
     }
 
-    public void showWorkout(List<Workout.Exercise> exercises)
+    public void showSharedWorkout(List<Workout.Exercise> exercises)
     {
         showInfo("\n--- SHARED WORKOUT ---");
         showInfo(formatWorkout(exercises));
@@ -159,4 +163,17 @@ public class SpotterView
     {
         output.println("Error: " + message);
     }
+
+    public void showWorkout(List<String> exerciseLines)
+    {
+        output.println(workoutView.format(exerciseLines));
+    }
+
+
+    public void showWorkout(String workoutName, List<String> exerciseLines)
+    {
+        output.println(workoutView.format(workoutName, exerciseLines));
+    }
+
+
 }

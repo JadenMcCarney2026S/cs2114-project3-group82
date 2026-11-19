@@ -1,6 +1,7 @@
 package spotter;
 
 import static org.junit.jupiter.api.Assertions.*;
+import java.util.HashMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import java.util.List;
@@ -210,4 +211,111 @@ class MainLogicTest
         assertThrows(IllegalArgumentException.class, () -> new MainLogic(alice, null));
         assertThrows(IllegalArgumentException.class, () -> new ChatManager(null));
     }
+
+    @Test
+    public void testCreateWorkout()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertTrue(model.createWorkout("Push Day"));
+        assertEquals("Push Day", model.getWorkout().getWorkoutName());
+
+    }
+
+    @Test
+    public void testCreateWorkoutInvalid()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertFalse(model.createWorkout(null));
+        assertFalse(model.createWorkout(""));
+        assertFalse(model.createWorkout("   "));
+
+        assertNull(model.getWorkout());
+    }
+
+
+    @Test
+    public void testAddExercise()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertTrue(model.createWorkout("Push Day"));
+        assertTrue(model.addExercise("Bench Press"));
+        assertTrue(model.addExercise("Shoulder Press"));
+
+        assertEquals(2, model.getWorkout().getExercises().size());
+        assertEquals("Bench Press",
+            model.getWorkout().getExercises().get(0));
+        assertEquals("Shoulder Press",
+            model.getWorkout().getExercises().get(1));
+    }
+
+    @Test
+    public void testAddExerciseInvalid()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertTrue(model.createWorkout("Push Day"));
+
+        assertFalse(model.addExercise(null));
+        assertFalse(model.addExercise(""));
+        assertFalse(model.addExercise("   "));
+
+        assertTrue(model.getWorkout().getExercises().isEmpty());
+    }
+
+
+    @Test
+    public void testAddExerciseWithoutWorkout()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertFalse(model.addExercise("Bench Press"));
+        assertNull(model.getWorkout());
+    }
+
+    @Test
+    public void testGetWorkoutBeforeCreation()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertNull(model.getWorkout());
+    }
+
+    @Test
+    public void testReplaceExistingWorkout()
+    {
+        UserProfile user = new UserProfile(
+            1, "Grace", 20, new HashMap<>());
+
+        MainLogic model = new MainLogic(user);
+
+        assertTrue(model.createWorkout("Push Day"));
+        assertTrue(model.addExercise("Bench Press"));
+
+        assertTrue(model.createWorkout("Leg Day"));
+
+        assertEquals("Leg Day", model.getWorkout().getWorkoutName());
+        assertTrue(model.getWorkout().getExercises().isEmpty());
+    }
+
 }

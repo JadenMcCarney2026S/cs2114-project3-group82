@@ -51,6 +51,22 @@ class SpotterControllerTest
     }
 
     @Test
+    void testPersonalAndSharedWorkoutCommands()
+    {
+        controller.run(new Scanner("createworkout Push Day\n"
+            + "addexercise Bench Press\nworkout\nright\nuser 2\nright\nuser 1\n"
+            + "exercise 2 3 8 0 Push ups\nworkout 2\nquit\n"));
+
+        assertEquals("Push Day", alice.getWorkout().getWorkoutName());
+        assertEquals(java.util.List.of("Bench Press"),
+            alice.getWorkout().getExercises());
+        assertEquals(java.util.List.of(new Workout.Exercise("Push ups", 3, 8, 0)),
+            alice.getWorkout(2));
+        assertTrue(output.toString().contains("Workout: Push Day"));
+        assertTrue(output.toString().contains("Push ups"));
+    }
+
+    @Test
     void testWorkoutRejectsMalformedTargetsAndMissingNumericFields()
     {
         controller.run(new Scanner("right\nuser 2\nright\n"

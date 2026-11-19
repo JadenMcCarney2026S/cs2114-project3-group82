@@ -110,9 +110,64 @@ public class SpotterController
         return conversation;
     }
 
+
+    public boolean createWorkout(String workoutName)
+    {
+        boolean created = model.createWorkout(workoutName);
+
+        if (created)
+        {
+            view.showInfo("Workout created: " + workoutName);
+        }
+        else
+        {
+            view.showError("Invalid workout name.");
+        }
+
+        return created;
+    }
+
+    public boolean addWorkoutExercise(String exercise)
+    {
+        boolean added = model.addExercise(exercise);
+
+        if (added)
+        {
+            view.showInfo("Exercise added: " + exercise);
+        }
+        else
+        {
+            view.showError("Cannot add exercise.");
+        }
+
+        return added;
+    }
+
+    public Workout displayWorkout()
+    {
+        Workout workout = model.getWorkout();
+
+        if (workout == null)
+        {
+            view.showInfo("No workout created.");
+        }
+        else
+        {
+            view.showInfo("Workout: " + workout.getWorkoutName());
+
+            for (String exercise : workout.getExercises())
+            {
+                view.showInfo("- " + exercise);
+            }
+        }
+
+        return workout;
+    }
+
+
     public void displayWorkout(int otherUserId)
     {
-        view.showWorkout(model.getWorkout(otherUserId));
+        view.showSharedWorkout(model.getWorkout(otherUserId));
     }
 
     public boolean addWorkoutExercise(int otherUserId, String name, String sets,
@@ -221,7 +276,6 @@ public class SpotterController
                         exercise[2], exercise[3], exercise[4]);
                     break;
                 case "chat":
-                case "workout":
                 case "user":
                     if (parts.length != 2)
                     {
@@ -232,10 +286,6 @@ public class SpotterController
                     if (parts[0].equals("chat"))
                     {
                         displayConversation(id);
-                    }
-                    else if (parts[0].equals("workout"))
-                    {
-                        displayWorkout(id);
                     }
                     else if (sessions.containsKey(id))
                     {
@@ -249,9 +299,46 @@ public class SpotterController
                         view.showError("Unknown user ID.");
                     }
                     break;
+
+                case "workout":
+                    if (parts.length == 1)
+                    {
+                        displayWorkout();
+                    }
+                    else if (parts.length == 2)
+                    {
+                        displayWorkout(Integer.parseInt(parts[1]));
+                    }
+                    else
+                    {
+                        view.showError("Usage: workout [id]");
+                    }
+                    break;
+
+                case "createworkout":
+                    if (parts.length < 2)
+                    {
+                        view.showError("Usage: createworkout <name>");
+                        break;
+                    }
+                    createWorkout(
+                        line.trim().substring(parts[0].length()).trim());
+                    break;
+
+                case "addexercise":
+                    if (parts.length < 2)
+                    {
+                        view.showError("Usage: addexercise <exercise>");
+                        break;
+                    }
+                    addWorkoutExercise(
+                        line.trim().substring(parts[0].length()).trim());
+                    break;
+
                 default:
                     view.showError("Unknown command. Type help.");
                     break;
+
             }
         }
         catch (NumberFormatException exception)

@@ -715,7 +715,7 @@ public class SpotterSwingView extends SpotterView
     }
 
     @Override
-    public void showWorkout(List<Workout.Exercise> exercises)
+    public void showSharedWorkout(List<Workout.Exercise> exercises)
     {
         workout.setText(formatWorkout(exercises));
     }
