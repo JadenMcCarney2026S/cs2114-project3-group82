@@ -27,11 +27,6 @@ public class SpotterApp
 
     static Map<Integer, MainLogic> createSessions()
     {
-        return createSessions(new ChatManager(new MatchManager()));
-    }
-
-    static Map<Integer, MainLogic> createSessions(ChatManager chat)
-    {
         List<UserProfile> users = List.of(
             new UserProfile(1, "Alice", 20, Map.of("Running", "Beginner"),
                 "Build endurance", "McComas Hall", "Morning", "Looking for a steady workout partner."),
@@ -41,6 +36,7 @@ public class SpotterApp
                 "Improve technique", "Blacksburg Aquatic Center", "Afternoon", "Learning one lap at a time."),
             new UserProfile(4, "Dave", 23, Map.of("Running", "Beginner"),
                 "Stay consistent", "Blacksburg Health & Fitness at The Weight Club", "Weekend", "Always up for a relaxed run."));
+        ChatManager chat = new ChatManager(new MatchManager());
         Map<Integer, MainLogic> sessions = new LinkedHashMap<>();
         for (UserProfile user : users)
         {
