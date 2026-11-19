@@ -63,7 +63,7 @@ The copy step puts the four photo files on the runtime classpath. `javac`
 compiles Java files but does not copy images. Omitting it causes the two
 photo-dependent Swing tests to fail in a fresh output directory.
 
-To run all 65 tests after the same compilation and resource copy:
+To run the full suite after the same compilation and resource copy:
 
 ```sh
 java -Djava.awt.headless=true -jar "$JUNIT" execute \
@@ -139,10 +139,12 @@ cp -R src/spotter/photos "$CONSOLE_OUT/spotter/"
 java -cp "$CONSOLE_OUT" spotter.SpotterSwingView
 ```
 
-In Eclipse, run `SpotterSwingView.java` as a Java Application. Like Bob as Alice,
-switch the Demo account dropdown to Bob, and like Alice. Select the resulting
-match in the list to send a message, then switch back to Alice and select Bob
-to see and reply to the same conversation. Carol cannot see that conversation.
+In Eclipse, run `SpotterSwingView.java` as a Java Application. The app opens one
+window for Alice and one for Bob. Like Bob in Alice's window and like Alice in
+Bob's window. Select the resulting match in both windows, then send a message
+from either window. The message appears in both conversations automatically.
+Switching either window to Carol clears the open conversation. Both windows
+share the same in-memory demo state within one Java process.
 Pass and Like disable when a queue is exhausted. The dropdown is demo identity
 switching, not authentication. The four fixed demo profiles use user-supplied sample photos: Alice and Carol
 use the two female portraits; Bob and Dave use two male portraits. These are

@@ -30,6 +30,66 @@ class SpotterSwingViewTest
     }
 
     @Test
+    void testLiveChatBetweenIndependentViews() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            Map<Integer, MainLogic> sessions = SpotterApp.createSessions();
+            SpotterSwingView alice = new SpotterSwingView(sessions, 1);
+            SpotterSwingView bob = alice.openPeerView(2);
+            JPanel alicePanel = alice.getPanel();
+            JPanel bobPanel = bob.getPanel();
+            ((JButton)find(alicePanel, "like")).doClick();
+            ((JButton)find(bobPanel, "like")).doClick();
+            ((JList<?>)find(alicePanel, "matches")).setSelectedIndex(0);
+            ((JList<?>)find(bobPanel, "matches")).setSelectedIndex(0);
+            JTextArea aliceHistory = (JTextArea)find(alicePanel, "conversation");
+            JTextArea bobHistory = (JTextArea)find(bobPanel, "conversation");
+            send(alicePanel, "Hi Bob");
+            assertEquals("1: Hi Bob", bobHistory.getText());
+            send(bobPanel, "Hi Alice");
+            assertEquals("1: Hi Bob\n\n2: Hi Alice", aliceHistory.getText());
+            send(bobPanel, "   ");
+            assertEquals(aliceHistory.getText(), bobHistory.getText());
+            ((JComboBox<?>)find(bobPanel, "users")).setSelectedIndex(2);
+            assertTrue(sessions.get(1).sendMessage(2, "Private"));
+            assertTrue(aliceHistory.getText().contains("Private"));
+            assertFalse(bobHistory.getText().contains("Private"));
+            ((JComboBox<?>)find(bobPanel, "users")).setSelectedIndex(1);
+            ((JList<?>)find(bobPanel, "matches")).setSelectedIndex(0);
+            assertTrue(bobHistory.getText().contains("Private"));
+            bob.close();
+            send(alicePanel, "After close");
+            assertFalse(bobHistory.getText().contains("After close"));
+            alice.close();
+        });
+    }
+
+    private void send(JPanel panel, String content)
+    {
+        ((JTextField)find(panel, "message")).setText(content);
+        ((JButton)find(panel, "send")).doClick();
+    }
+
+    @Test
+    void testNewProfileAppearsInPeerAccountPicker() throws Exception
+    {
+        SwingUtilities.invokeAndWait(() -> {
+            SpotterSwingView alice = new SpotterSwingView();
+            SpotterSwingView bob = alice.openPeerView(2);
+            assertTrue(alice.createDemoProfile(new UserProfile(5, "Eve", 24,
+                Map.of("Running", "Beginner"))));
+            JComboBox<?> bobUsers = (JComboBox<?>)find(bob.getPanel(), "users");
+            assertEquals("Bob / 2", bobUsers.getSelectedItem());
+            assertEquals("Eve / 5", bobUsers.getItemAt(4));
+            bobUsers.setSelectedIndex(4);
+            assertEquals("Active user: 5",
+                ((JLabel)find(bob.getPanel(), "status")).getText());
+            bob.close();
+            alice.close();
+        });
+    }
+
+    @Test
     void testButtonsCreateRealMatchAndSharedConversation() throws Exception
     {
         SwingUtilities.invokeAndWait(() -> {

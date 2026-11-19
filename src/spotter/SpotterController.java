@@ -15,15 +15,26 @@ public class SpotterController
     public SpotterController(Map<Integer, MainLogic> sessions, int currentUserId,
         SpotterView view)
     {
+        this(sessions, currentUserId, view, false);
+    }
+
+    SpotterController(Map<Integer, MainLogic> sessions, int currentUserId,
+        SpotterView view, boolean shareSessions)
+    {
         if (sessions == null || !sessions.containsKey(currentUserId)
             || sessions.values().stream().anyMatch(java.util.Objects::isNull) || view == null)
         {
             throw new IllegalArgumentException("Valid sessions and view are required");
         }
-        this.sessions = new LinkedHashMap<>(sessions);
+        this.sessions = shareSessions ? sessions : new LinkedHashMap<>(sessions);
         this.model = sessions.get(currentUserId);
         this.currentUserId = currentUserId;
         this.view = view;
+    }
+
+    int getCurrentUserId()
+    {
+        return currentUserId;
     }
 
     /** Register an in-memory demo identity and offer eligible profiles both ways. */

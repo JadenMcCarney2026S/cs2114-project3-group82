@@ -1,5 +1,7 @@
 package spotter;
 
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,7 @@ public class ChatManager
 {
     private final MatchManager matchManager;
     private final Map<String, List<Message>> conversations = new HashMap<>();
+    private final PropertyChangeSupport updates = new PropertyChangeSupport(this);
 
     public ChatManager(MatchManager matchManager)
     {
@@ -23,6 +26,16 @@ public class ChatManager
     MatchManager getMatchManager()
     {
         return matchManager;
+    }
+
+    void addMessageListener(PropertyChangeListener listener)
+    {
+        updates.addPropertyChangeListener(listener);
+    }
+
+    void removeMessageListener(PropertyChangeListener listener)
+    {
+        updates.removePropertyChangeListener(listener);
     }
 
     private String conversationKey(int userId, int otherUserId)
@@ -39,6 +52,7 @@ public class ChatManager
         }
         conversations.computeIfAbsent(conversationKey(senderId, recipientId),
             key -> new ArrayList<>()).add(new Message(senderId, content));
+        updates.firePropertyChange("chat", senderId, recipientId);
         return true;
     }
 

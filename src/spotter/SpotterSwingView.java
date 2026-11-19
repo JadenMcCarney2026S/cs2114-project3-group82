@@ -1,7 +1,13 @@
 package spotter;
 
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
 import java.util.List;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -25,14 +31,35 @@ public class SpotterSwingView extends SpotterView
     private final JTextArea conversation = new JTextArea();
     private final JTextField message = new JTextField();
     private final JButton send = button("Send", "send");
-    private final JComboBox<String> users = new JComboBox<>(new String[] {
-        "Alice / 1", "Bob / 2", "Carol / 3", "Dave / 4" });
+    private final JComboBox<String> users = new JComboBox<>();
+    private final Map<Integer, MainLogic> sessions;
+    private final PropertyChangeSupport updates;
+    private final PropertyChangeListener updateListener = this::refreshPeer;
+    private final PropertyChangeListener messageListener = this::refreshConversation;
+    private final ChatManager chat;
     private final SpotterController controller;
+    private boolean closed;
 
     public SpotterSwingView()
     {
+        this(SpotterApp.createSessions(), 1);
+    }
+
+    SpotterSwingView(Map<Integer, MainLogic> sessions, int userId)
+    {
+        this(sessions, userId, new PropertyChangeSupport(sessions));
+    }
+
+    private SpotterSwingView(Map<Integer, MainLogic> sessions, int userId,
+        PropertyChangeSupport updates)
+    {
         super(System.out);
-        controller = new SpotterController(SpotterApp.createSessions(), 1, this);
+        this.sessions = sessions;
+        this.updates = updates;
+        chat = sessions.get(userId).getChatManager();
+        controller = new SpotterController(sessions, userId, this, true);
+        sessions.values().forEach(session -> addAccount(session.getCurrentUser()));
+        users.setSelectedItem(accountLabel(sessions.get(userId).getCurrentUser()));
         panel.setBackground(BACKGROUND);
         panel.setBorder(new EmptyBorder(24, 28, 20, 28));
         panel.setPreferredSize(new Dimension(960, 820));
@@ -190,7 +217,9 @@ public class SpotterSwingView extends SpotterView
         controller.displayNextProfile();
         controller.displayMatches();
         updateComposer();
-        showInfo("Alice likes Bob? Switch to Bob and like Alice to create a real match.");
+        showInfo("Like each other to start a conversation.");
+        this.updates.addPropertyChangeListener(updateListener);
+        chat.addMessageListener(messageListener);
     }
 
     private void showCreateProfile()
@@ -237,7 +266,12 @@ public class SpotterSwingView extends SpotterView
         {
             try
             {
-                UserProfile user = new UserProfile(users.getItemCount() + 1,
+                int userId = 1;
+                while (sessions.containsKey(userId))
+                {
+                    userId++;
+                }
+                UserProfile user = new UserProfile(userId,
                     fields[0].getText(), Integer.parseInt(fields[1].getText().trim()),
                     java.util.Map.of((String)activity.getSelectedItem(),
                         (String)level.getSelectedItem()), fields[2].getText(),
@@ -263,10 +297,8 @@ public class SpotterSwingView extends SpotterView
             showError("Profile ID already exists or profile is missing.");
             return false;
         }
-        users.addItem(user.getName() + " / " + user.getUserId());
-        users.setSelectedIndex(users.getItemCount() - 1);
-        controller.handleCommand("user " + user.getUserId());
-        controller.displayMatches();
+        updates.firePropertyChange("profile", null, user);
+        users.setSelectedItem(accountLabel(user));
         showInfo("Demo profile created. Data is kept until this app closes.");
         return true;
     }
@@ -290,7 +322,7 @@ public class SpotterSwingView extends SpotterView
     private void swipe(SwipeAction action)
     {
         controller.handleSwipe(action);
-        controller.displayMatches();
+        updates.firePropertyChange("swipe", null, null);
     }
 
     private void updateComposer()
@@ -308,8 +340,46 @@ public class SpotterSwingView extends SpotterView
             selected.getUserId(), message.getText()))
         {
             message.setText("");
+        }
+    }
+
+    private void refreshConversation(PropertyChangeEvent event)
+    {
+        if (!SwingUtilities.isEventDispatchThread())
+        {
+            SwingUtilities.invokeLater(() -> refreshConversation(event));
+            return;
+        }
+        UserProfile selected = matches.getSelectedValue();
+        int userId = controller.getCurrentUserId();
+        int sender = (Integer)event.getOldValue();
+        int recipient = (Integer)event.getNewValue();
+        if (!closed && selected != null
+            && ((userId == sender && selected.getUserId() == recipient)
+                || (userId == recipient && selected.getUserId() == sender)))
+        {
             controller.displayConversation(selected.getUserId());
         }
+    }
+
+    private void refreshPeer(PropertyChangeEvent event)
+    {
+        if ("profile".equals(event.getPropertyName()))
+        {
+            addAccount((UserProfile)event.getNewValue());
+        }
+        controller.displayNextProfile();
+        controller.displayMatches();
+    }
+
+    private void addAccount(UserProfile user)
+    {
+        users.addItem(accountLabel(user));
+    }
+
+    private static String accountLabel(UserProfile user)
+    {
+        return user.getName() + " / " + user.getUserId();
     }
 
     @Override
@@ -347,11 +417,30 @@ public class SpotterSwingView extends SpotterView
     @Override
     public void showMatches(List<UserProfile> profiles)
     {
+        UserProfile selected = matches.getSelectedValue();
+        if (profiles.equals(java.util.Collections.list(matchItems.elements())))
+        {
+            if (selected == null)
+            {
+                showChatPrompt(profiles);
+            }
+            return;
+        }
         matchItems.clear();
         for (UserProfile profile : profiles)
         {
             matchItems.addElement(profile);
         }
+        if (selected != null && profiles.contains(selected))
+        {
+            matches.setSelectedValue(selected, true);
+            return;
+        }
+        showChatPrompt(profiles);
+    }
+
+    private void showChatPrompt(List<UserProfile> profiles)
+    {
         conversation.setText(profiles.isEmpty()
             ? "No matches yet. A match needs two likes." : "Select a match to chat.");
         updateComposer();
@@ -383,17 +472,44 @@ public class SpotterSwingView extends SpotterView
         return panel;
     }
 
+    SpotterSwingView openPeerView(int userId)
+    {
+        return new SpotterSwingView(sessions, userId, updates);
+    }
+
+    void close()
+    {
+        closed = true;
+        updates.removePropertyChangeListener(updateListener);
+        chat.removeMessageListener(messageListener);
+    }
+
+    private void showWindow(int offset)
+    {
+        JFrame window = new JFrame("Spotter - Gym partners");
+        window.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        window.addWindowListener(new WindowAdapter()
+        {
+            @Override
+            public void windowClosed(WindowEvent event)
+            {
+                close();
+            }
+        });
+        window.setContentPane(panel);
+        window.pack();
+        window.setMinimumSize(new Dimension(900, 800));
+        window.setLocationRelativeTo(null);
+        window.setLocation(window.getX() + offset, window.getY() + offset);
+        window.setVisible(true);
+    }
+
     public static void main(String[] args)
     {
         SwingUtilities.invokeLater(() -> {
             SpotterSwingView view = new SpotterSwingView();
-            JFrame window = new JFrame("Spotter - Gym partners");
-            window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            window.setContentPane(view.getPanel());
-            window.pack();
-            window.setMinimumSize(new Dimension(900, 800));
-            window.setLocationRelativeTo(null);
-            window.setVisible(true);
+            view.showWindow(-35);
+            view.openPeerView(2).showWindow(35);
         });
     }
 }
